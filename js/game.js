@@ -65,6 +65,7 @@ export class Game{
     this.jumpVelocity=0; this.grounded=true;
     this.mouse={x:0,y:0,down:false,dx:0,dy:0};
     this.yaw=-0.4; this.pitch=0.25; this.dist=9;
+    this.cameraSensitivity=1;
     // Safe first frame: avoid a blank/ground-only view while the camera eases in.
     this.camera.position.set(-3.5, 5.6, 18.3);
     this.resources=[];
@@ -146,9 +147,12 @@ export class Game{
     window.addEventListener('mousedown',e=>{ if(e.button===0) this.onShoot(); if(e.button===2) this.equipWeapon(this.weapon==='sword'?'pistol':'sword'); });
     // Use the canvas owned by this Game instance. Referencing the old local
     // constructor argument here caused `canvas is not defined` in init().
-    this.canvas.addEventListener('mousemove',e=>{ this.mouse.dx=e.movementX||0; this.mouse.dy=e.movementY||0; if(e.buttons===1){ this.yaw-=this.mouse.dx*0.004; this.pitch=Math.max(0.1,Math.min(1.1,this.pitch - this.mouse.dy*0.004)); }});
+    this.canvas.addEventListener('mousemove',e=>{ this.mouse.dx=e.movementX||0; this.mouse.dy=e.movementY||0; if(e.buttons===1){ this.yaw-=this.mouse.dx*0.004*this.cameraSensitivity; this.pitch=Math.max(0.1,Math.min(1.1,this.pitch - this.mouse.dy*0.004*this.cameraSensitivity)); }});
     this.canvas.addEventListener('click',()=>this.canvas.requestPointerLock?.());
-    this.canvas.addEventListener('wheel',e=>{ const step=e.deltaY>0?1:-1; selectHotbar((hotbar.selected+step+hotbar.slots.length)%hotbar.slots.length); e.preventDefault(); },{passive:false});
+    this.canvas.addEventListener('wheel',e=>{
+      if(e.ctrlKey){ this.dist=Math.max(4,Math.min(16,this.dist+e.deltaY*.01)); e.preventDefault(); return; }
+      const step=e.deltaY>0?1:-1; selectHotbar((hotbar.selected+step+hotbar.slots.length)%hotbar.slots.length); e.preventDefault();
+    },{passive:false});
     window.addEventListener('resize',()=>this.onResize());
     // inventory listener
     inventory.onChange(()=>{ renderInventory(); this.updateQuestHUD() });

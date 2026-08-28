@@ -29,16 +29,16 @@ function initMenu(){
     document.getElementById('menu').classList.remove('active');
     startGame(null, true);
   };
-  const settings=JSON.parse(localStorage.getItem('carpincho_settings')||'{"quality":"Alta","volume":80,"ui":100}');
-  $('cfg-quality').value=settings.quality; $('cfg-volume').value=settings.volume; $('cfg-ui').value=settings.ui;
+  const settings=JSON.parse(localStorage.getItem('carpincho_settings')||'{"quality":"Alta","volume":80,"ui":100,"sensitivity":100}');
+  $('cfg-quality').value=settings.quality; $('cfg-volume').value=settings.volume; $('cfg-ui').value=settings.ui; $('cfg-sensitivity').value=settings.sensitivity||100;
   const applySettings=()=>{
-    const next={quality:$('cfg-quality').value,volume:Number($('cfg-volume').value),ui:Number($('cfg-ui').value)};
+    const next={quality:$('cfg-quality').value,volume:Number($('cfg-volume').value),ui:Number($('cfg-ui').value),sensitivity:Number($('cfg-sensitivity').value)};
     localStorage.setItem('carpincho_settings',JSON.stringify(next));
     document.documentElement.style.setProperty('--ui-scale',next.ui/100);
-    game?.setQuality(next.quality); game?.audio.setVolume(next.volume/100);
+    game?.setQuality(next.quality); game?.audio.setVolume(next.volume/100); if(game) game.cameraSensitivity=next.sensitivity/100;
   };
   $('btn-config').onclick=()=>{ document.getElementById('menu').classList.remove('active'); document.getElementById('config').classList.add('active'); };
-  $('cfg-quality').onchange=applySettings; $('cfg-volume').oninput=applySettings; $('cfg-ui').oninput=applySettings; applySettings();
+  $('cfg-quality').onchange=applySettings; $('cfg-volume').oninput=applySettings; $('cfg-ui').oninput=applySettings; $('cfg-sensitivity').oninput=applySettings; applySettings();
   $('btn-config-back').onclick=()=>{ applySettings(); document.getElementById('config').classList.remove('active'); document.getElementById('menu').classList.add('active'); };
   $('btn-creditos').onclick=()=> showNotif('CARPINCHO: THE LOST RAILWAY • MVP web');
   $('btn-multiplayer').onclick=()=>{ $('menu').classList.remove('active'); $('multiplayer').classList.add('active'); };
