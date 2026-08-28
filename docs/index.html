@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CARPINCHO: The Lost Railway — Jogar</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--gold:#d4a843;--bg:#0f1f0a;--panel:#1a2e12}
+body{background:var(--bg);color:#fdf6e3;font-family:'Segoe UI',system-ui,sans-serif;overflow:hidden}
+#topbar{height:42px;background:rgba(0,0,0,0.6);border-bottom:1px solid rgba(212,168,67,0.2);display:flex;align-items:center;justify-content:space-between;padding:0 14px;font-size:13px}
+#topbar b{color:var(--gold);letter-spacing:2px}
+#stats{display:flex;gap:12px}
+.stat{background:rgba(253,246,227,0.08);padding:4px 10px;border-radius:6px;font-size:12px}
+#layout{display:flex;height:calc(100vh - 42px)}
+#left{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0a1a05;padding:10px}
+canvas{border:2px solid rgba(212,168,67,0.3);border-radius:8px;background:#1e3a15;image-rendering:pixelated;box-shadow:0 8px 32px rgba(0,0,0,0.5)}
+#right{width:320px;background:var(--panel);border-left:1px solid rgba(212,168,67,0.15);padding:14px;overflow-y:auto}
+h2{font-size:13px;letter-spacing:2px;color:var(--gold);margin:12px 0 6px}
+h2:first-child{margin-top:0}
+.inv-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.slot{background:rgba(0,0,0,0.3);border:1px solid rgba(253,246,227,0.1);border-radius:6px;height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:18px}
+.slot small{font-size:10px;color:rgba(253,246,227,0.6)}
+.quest{background:rgba(212,168,67,0.1);border:1px solid rgba(212,168,67,0.2);border-radius:8px;padding:10px;font-size:12px;line-height:1.5}
+.quest b{color:var(--gold)}
+.bar{height:10px;background:rgba(0,0,0,0.4);border-radius:5px;overflow:hidden;margin:4px 0}
+.bar i{display:block;height:100%;background:var(--gold)}
+.controls{font-size:11px;line-height:1.7;color:rgba(253,246,227,0.6);background:rgba(0,0,0,0.2);padding:8px;border-radius:6px}
+a{color:var(--gold)}
+#msg{position:fixed;left:50%;top:60px;transform:translateX(-50%);background:rgba(0,0,0,0.8);border:1px solid var(--gold);padding:8px 16px;border-radius:20px;font-size:13px;display:none;z-index:10}
+</style>
+</head>
+<body>
+<div id="topbar">
+  <div><b>CARPINCHO</b> THE LOST RAILWAY <span style="opacity:0.5">• Estação: Planície</span></div>
+  <div id="stats">
+    <div class="stat">⭐ Lv <span id="lv">1</span></div>
+    <div class="stat">🪙 <span id="coins">100</span></div>
+    <div class="stat">⛽ <span id="fuel">80</span>%</div>
+    <div class="stat">🔧 <span id="integ">100</span>%</div>
+  </div>
+</div>
+<div id="msg"></div>
+<div id="layout">
+  <div id="left">
+    <canvas id="c" width="800" height="560"></canvas>
+    <div style="font-size:11px;opacity:0.5;margin-top:8px">WASD mover • E interagir/coletar/entrar no trem • Q/E trem • I inventário • R reparar trilho</div>
+  </div>
+  <div id="right">
+    <h2>🎒 INVENTÁRIO</h2>
+    <div class="inv-grid" id="inv"></div>
+    <div style="font-size:11px;opacity:0.6;margin-top:6px"><span id="weight">0</span>/100 KG</div>
+    <h2>📜 MISSÃO PRINCIPAL</h2>
+    <div class="quest" id="quest">
+      <b>PRIMEIRA PARTIDA</b><br>
+      <span id="q1">☐ Inspecionar locomotiva (chegue perto e E)</span><br>
+      <span id="q2">☐ Abastecer (colete 3 carvões → E no trem)</span><br>
+      <span id="q3">☐ Entrar na cabine (E no trem)</span><br>
+      <span id="q4">☐ Partir (Q para acelerar)</span>
+    </div>
+    <div style="margin-top:8px">
+      <div style="font-size:11px">Progresso</div>
+      <div class="bar"><i id="qbar" style="width:0%"></i></div>
+    </div>
+    <h2>🗺️ MAPA</h2>
+    <div style="font-size:12px;line-height:1.6;opacity:0.7">
+      📍 Planície — Estação Inicial<br>
+      🌲 Floresta — 60m ao norte (precisa reparar trilho)<br>
+      🚉 Estação Zero — bloqueada
+    </div>
+    <h2>⌨️ CONTROLES</h2>
+    <div class="controls">
+      <b>WASD</b> mover capivara<br>
+      <b>E</b> coletar / interagir / entrar no trem<br>
+      <b>Q</b> acelerar trem &nbsp; <b>E</b> frear (no trem)<br>
+      <b>R</b> reparar trilho quebrado (3 sucata +2 ferro)
+    </div>
+    <div style="margin-top:12px;text-align:center"><a href="https://github.com/reicapivararbx/carpincho-the-lost-railway" target="_blank" style="font-size:11px">⭐ GitHub</a> • <a href="/gamerails" style="font-size:11px">Sobre</a></div>
+  </div>
+</div>
+<script>
+const canvas=document.getElementById('c'),ctx=canvas.getContext('2d')
+const TILE=28, W=800, H=560, COLS=Math.floor(W/TILE), ROWS=Math.floor(H/TILE)
+let px=5, py=10, inTrain=false, trainX=4, trainY=10, trainSpeed=0, fuel=80, integ=100, coins=100, lv=1, xp=0
+let inv={wood:0,stone:0,iron:0,scrap:0,coal:0,herbs:0}
+let quest={inspect:false,fuelDone:false,enter:false,depart:false}
+let keys={}
+let resources=[
+  {x:8,y:6,t:'tree',hp:2},{x:12,y:5,t:'tree',hp:2},{x:18,y:7,t:'tree',hp:2},{x:22,y:12,t:'tree',hp:2},{x:6,y:14,t:'tree',hp:2},
+  {x:10,y:8,t:'rock',hp:2},{x:16,y:9,t:'rock',hp:2},{x:20,y:6,t:'rock',hp:2},{x:24,y:10,t:'rock',hp:2},
+  {x:14,y:13,t:'scrap',hp:1},{x:9,y:11,t:'scrap',hp:1},{x:19,y:14,t:'scrap',hp:1},
+  {x:11,y:7,t:'coal',hp:1},{x:15,y:6,t:'coal',hp:1},{x:21,y:8,t:'coal',hp:1},
+]
+let brokenRail={x:14,y:10,repaired:false}
+let stationX=2
+function msg(t,ms=1800){const m=document.getElementById('msg');m.textContent=t;m.style.display='block';clearTimeout(m._t);m._t=setTimeout(()=>m.style.display='none',ms)}
+function addItem(id,n=1){inv[id]=(inv[id]||0)+n; if(id==='wood'||id==='stone'||id==='iron'||id==='scrap'||id==='coal') msg(`+${n} ${id}`)}
+function dist(ax,ay,bx,by){return Math.hypot(ax-bx,ay-by)}
+function draw(){
+  ctx.fillStyle='#2d5a1e';ctx.fillRect(0,0,W,H)
+  // grid
+  ctx.strokeStyle='rgba(0,0,0,0.08)';for(let x=0;x<W;x+=TILE){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}for(let y=0;y<H;y+=TILE){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+  // rails (horizontal line y=10)
+  const ry=trainY*TILE+TILE/2
+  ctx.fillStyle='#5a3e1b';ctx.fillRect(0,ry-8,W,16)
+  ctx.fillStyle='#8B7355';ctx.fillRect(0,ry-6,W,3);ctx.fillRect(0,ry+3,W,3)
+  // ties
+  ctx.fillStyle='#3b2314';for(let x=0;x<W;x+=TILE*1.5) ctx.fillRect(x,ry-10,8,20)
+  // broken
+  if(!brokenRail.repaired){
+    ctx.fillStyle='rgba(255,60,60,0.9)';ctx.fillRect(brokenRail.x*TILE,ry-12,TILE*2,24)
+    ctx.fillStyle='#fff';ctx.font='10px sans-serif';ctx.fillText('QUEBRADO',brokenRail.x*TILE+2,ry-14)
+    ctx.fillText('R p/ reparar',brokenRail.x*TILE+2,ry+24)
+  }
+  // station
+  ctx.fillStyle='#8B4513';ctx.fillRect(stationX*TILE-8, (trainY-2)*TILE, TILE*3, TILE*3)
+  ctx.fillStyle='#d4a843';ctx.font='11px sans-serif';ctx.fillText('ESTAÇÃO',stationX*TILE-4,(trainY-2)*TILE-6)
+  // resources
+  for(const r of resources){
+    if(r.hp<=0) continue
+    const cx=r.x*TILE+TILE/2, cy=r.y*TILE+TILE/2
+    if(r.t==='tree'){ctx.fillStyle='#1a3a0a';ctx.beginPath();ctx.arc(cx,cy,12,0,Math.PI*2);ctx.fill();ctx.fillStyle='#5a3e1b';ctx.fillRect(cx-3,cy+6,6,10);ctx.fillStyle='#fff';ctx.font='10px sans-serif';ctx.fillText('🌲',cx-7,cy+4)}
+    else if(r.t==='rock'){ctx.fillStyle='#6a6a6a';ctx.beginPath();ctx.arc(cx,cy,10,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.font='10px sans-serif';ctx.fillText('🪨',cx-7,cy+4)}
+    else if(r.t==='scrap'){ctx.fillStyle='#8a7a5a';ctx.fillRect(cx-10,cy-8,20,14);ctx.fillStyle='#fff';ctx.font='10px sans-serif';ctx.fillText('🔩',cx-7,cy+4)}
+    else if(r.t==='coal'){ctx.fillStyle='#222';ctx.beginPath();ctx.arc(cx,cy,9,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.font='10px sans-serif';ctx.fillText('⬢',cx-5,cy+4)}
+  }
+  // train
+  const tx=trainX*TILE, ty=trainY*TILE
+  ctx.fillStyle='#b34700';ctx.fillRect(tx,ty-10,TILE*3.2,22)
+  ctx.fillStyle='#d4a843';ctx.fillRect(tx+4,ty-6,18,10);ctx.fillRect(tx+26,ty-6,14,10)
+  ctx.fillStyle='#333';ctx.beginPath();ctx.arc(tx+8,ty+12,6,0,Math.PI*2);ctx.arc(tx+28,ty+12,6,0,Math.PI*2);ctx.arc(tx+48,ty+12,6,0,Math.PI*2);ctx.fill()
+  ctx.fillStyle='#666';ctx.beginPath();ctx.arc(tx+8,ty+12,2,0,Math.PI*2);ctx.arc(tx+28,ty+12,2,0,Math.PI*2);ctx.arc(tx+48,ty+12,2,0,Math.PI*2);ctx.fill()
+  if(trainSpeed>0.2){ctx.fillStyle='rgba(200,200,200,0.5)';ctx.beginPath();ctx.arc(tx-6,ty-8,4+Math.random()*3,0,Math.PI*2);ctx.fill()}
+  ctx.fillStyle='#fff';ctx.font='10px sans-serif';ctx.fillText('🚂',tx+2,ty+2)
+  // player capybara
+  if(!inTrain){
+    const cx=px*TILE+TILE/2, cy=py*TILE+TILE/2
+    ctx.fillStyle='#c49a6c';ctx.beginPath();ctx.ellipse(cx,cy+4,13,9,0,0,Math.PI*2);ctx.fill()
+    ctx.beginPath();ctx.arc(cx+6,cy-6,8,0,Math.PI*2);ctx.fill()
+    ctx.fillStyle='#000';ctx.beginPath();ctx.arc(cx+9,cy-7,1.5,0,Math.PI*2);ctx.fill()
+    ctx.fillStyle='#5a3e1b';ctx.beginPath();ctx.arc(cx+10,cy-3,2,0,Math.PI*2);ctx.fill()
+    ctx.font='12px sans-serif';ctx.fillText('🦫',cx-8,cy+2)
+  }else{
+    // highlight cabin
+    ctx.strokeStyle='rgba(212,168,67,0.9)';ctx.lineWidth=2;ctx.strokeRect(tx,ty-12,TILE*1.6,24)
+    ctx.fillStyle='#fff';ctx.font='10px sans-serif';ctx.fillText('VOCÊ',tx+2,ty-14)
+  }
+  // prompt
+  const nearTrain = dist(px,py,trainX,trainY)<1.6
+  const nearBroken = dist(px,py,brokenRail.x,brokenRail.y)<1.8
+  let prompt=''
+  if(inTrain) prompt='Q acelerar • E frear • F sair'
+  else if(nearBroken && !brokenRail.repaired) prompt='[R] Reparar trilho (3 sucata+2 ferro)  [E] coletar perto'
+  else if(nearTrain) prompt='[E] Entrar no trem'
+  else{
+    const nearRes=resources.find(r=>r.hp>0 && dist(px,py,r.x,r.y)<1.4)
+    if(nearRes) prompt='[E] Coletar '+nearRes.t
+    else if(dist(px,py,stationX,trainY)<1.8) prompt='Estação — colete recursos!'
+  }
+  if(prompt){ctx.fillStyle='rgba(0,0,0,0.7)';ctx.fillRect(W/2-140,H-28,280,18);ctx.fillStyle='#fff';ctx.font='11px sans-serif';ctx.textAlign='center';ctx.fillText(prompt,W/2,H-16);ctx.textAlign='left'}
+}
+function updateInv(){
+  const grid=document.getElementById('inv');grid.innerHTML=''
+  const icons={wood:'🪵',stone:'🪨',iron:'🔩',scrap:'🔧',coal:'⬢',herbs:'🌿'}
+  let w=0
+  for(const k of ['wood','stone','iron','scrap','coal','herbs']){
+    const n=inv[k]||0; const weight={wood:1,stone:2,iron:2,scrap:1.5,coal:1.5,herbs:0.5}[k]*n; w+=weight
+    const d=document.createElement('div');d.className='slot';d.innerHTML=`<span>${icons[k]||'?'}</span><small>${k} x${n}</small>`;grid.appendChild(d)
+  }
+  document.getElementById('weight').textContent=w.toFixed(1)
+  document.getElementById('fuel').textContent=Math.round(fuel)
+  document.getElementById('integ').textContent=Math.round(integ)
+  document.getElementById('coins').textContent=coins
+  document.getElementById('lv').textContent=lv
+  // quest
+  const qb=document.getElementById('qbar')
+  let done=0; if(quest.inspect)done++; if(quest.fuelDone)done++; if(quest.enter)done++; if(quest.depart)done++
+  qb.style.width=(done/4*100)+'%'
+  document.getElementById('q1').textContent=(quest.inspect?'☑':'☐')+' Inspecionar locomotiva'
+  document.getElementById('q2').textContent=(quest.fuelDone?'☑':'☐')+' Abastecer (3 carvões)'
+  document.getElementById('q3').textContent=(quest.enter?'☑':'☐')+' Entrar na cabine'
+  document.getElementById('q4').textContent=(quest.depart?'☑':'☐')+' Partir (Q)'
+  if(done===4){document.getElementById('quest').style.borderColor='#2ecc71';msg('🎉 PRIMEIRA PARTIDA completa! +150 XP +50 moedas',3000);coins+=50;xp+=150;if(xp>=100){lv++;xp-=100} quest.done=true}
+}
+function tryCollect(){
+  if(inTrain) return
+  for(const r of resources){
+    if(r.hp<=0) continue
+    if(dist(px,py,r.x,r.y)<1.6){
+      r.hp-- 
+      if(r.hp<=0){
+        if(r.t==='tree') addItem('wood',2)
+        else if(r.t==='rock') addItem('stone',2)
+        else if(r.t==='scrap') addItem('scrap',1)
+        else if(r.t==='coal') addItem('coal',1)
+        // respawn after 12s
+        setTimeout(()=>{r.hp=r.t==='scrap'||r.t==='coal'?1:2},12000)
+      } else msg('Coletando...')
+      updateInv(); return
+    }
+  }
+  // train inspect
+  if(dist(px,py,trainX,trainY)<1.6 && !quest.inspect){quest.inspect=true;msg('Locomotiva inspecionada!');updateInv()}
+  // enter train
+  if(dist(px,py,trainX,trainY)<1.6){
+    // need fuel?
+    if(inv.coal>=3 && !quest.fuelDone){inv.coal-=3;fuel=Math.min(100,fuel+30);quest.fuelDone=true;msg('Abastecido! +30 combustível');updateInv();return}
+    inTrain=true;quest.enter=true;msg('Entrou na cabine! Q para acelerar');updateInv()
+  }
+  // repair
+  if(dist(px,py,brokenRail.x,brokenRail.y)<1.8 && !brokenRail.repaired){
+    if(inv.scrap>=3 && inv.iron>=2){inv.scrap-=3;inv.iron-=2;brokenRail.repaired=true;msg('Trilho reparado! Floresta liberada');updateInv()}
+    else msg('Precisa 3 sucata + 2 ferro')
+  }
+}
+function handleKeys(){
+  if(inTrain){
+    if(keys['q']||keys['Q']){trainSpeed=Math.min(4,trainSpeed+0.08); fuel=Math.max(0,fuel-0.02); if(trainSpeed>1 && !quest.depart){quest.depart=true;updateInv()}}
+    if(keys['e']||keys['E']){trainSpeed=Math.max(0,trainSpeed-0.15)}
+    if(keys['f']||keys['F']){inTrain=false; px=trainX+2; py=trainY; msg('Saiu do trem')}
+    trainX+=trainSpeed*0.04
+    if(trainX>COLS-2) trainX=COLS-2
+    if(trainX<stationX) trainX=stationX
+    if(!brokenRail.repaired && trainX>brokenRail.x-1 && trainX<brokenRail.x+1 && trainSpeed>0.5){trainSpeed=0; integ=Math.max(0,integ-5); msg('Trilho quebrado! Repare a pé (R)'); updateInv()}
+    document.getElementById('fuel').textContent=Math.round(fuel)
+  } else {
+    let dx=0,dy=0; if(keys['w']||keys['W']) dy=-1; if(keys['s']||keys['S']) dy=1; if(keys['a']||keys['A']) dx=-1; if(keys['d']||keys['D']) dx=1
+    if(dx||dy){const len=Math.hypot(dx,dy);dx/=len;dy/=len; px=Math.max(0,Math.min(COLS-1,px+dx*0.12)); py=Math.max(0,Math.min(ROWS-1,py+dy*0.12))}
+  }
+}
+addEventListener('keydown',e=>{
+  keys[e.key]=true
+  if(e.key==='e'||e.key==='E') tryCollect()
+  if((e.key==='r'||e.key==='R') && !inTrain){
+    if(dist(px,py,brokenRail.x,brokenRail.y)<1.8 && !brokenRail.repaired){
+      if(inv.scrap>=3 && inv.iron>=2){inv.scrap-=3;inv.iron-=2;brokenRail.repaired=true;msg('Trilho reparado!');updateInv()} else msg('Precisa 3 sucata + 2 ferro')
+    }
+  }
+  if(e.key==='i'||e.key==='I') msg('Inventário ao lado →')
+})
+addEventListener('keyup',e=>keys[e.key]=false)
+function loop(){handleKeys();draw();requestAnimationFrame(loop)}
+updateInv();loop();msg('Bem-vindo! Colete 3 carvões e abasteça o trem',2500)
+</script>
+</body>
+</html>
