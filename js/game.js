@@ -24,6 +24,7 @@ import { showNotif } from './ui/ui.js';
 import { rollLoot } from './data/lootTables.js';
 import { RecipeDB } from './data/recipes.js';
 import { AudioManager } from './audio/audioManager.js';
+import { hotbar, selectHotbar, renderHotbar, hotbarFromJSON, hotbarToJSON, selectedItem } from './ui/hotbar.js';
 
 export class Game{
   constructor(canvas){
@@ -130,9 +131,11 @@ export class Game{
     // constructor argument here caused `canvas is not defined` in init().
     this.canvas.addEventListener('mousemove',e=>{ this.mouse.dx=e.movementX||0; this.mouse.dy=e.movementY||0; if(e.buttons===1){ this.yaw-=this.mouse.dx*0.004; this.pitch=Math.max(0.1,Math.min(1.1,this.pitch - this.mouse.dy*0.004)); }});
     this.canvas.addEventListener('click',()=>this.canvas.requestPointerLock?.());
+    this.canvas.addEventListener('wheel',e=>{ const step=e.deltaY>0?1:-1; selectHotbar((hotbar.selected+step+hotbar.slots.length)%hotbar.slots.length); e.preventDefault(); },{passive:false});
     window.addEventListener('resize',()=>this.onResize());
     // inventory listener
     inventory.onChange(()=>{ renderInventory(); this.updateQuestHUD() });
+    inventory.onChange(renderHotbar);
     renderRecipes('hand', this.player.level);
     this.updateQuestHUD();
     // load save?
@@ -195,6 +198,7 @@ export class Game{
   onKey(e, down){
     this.keys[e.key.toLowerCase()]=down;
     if(!down) return;
+    if(/^[1-9]$/.test(e.key)){ selectHotbar(Number(e.key)-1); return; }
     if(e.key==='Escape'){ this.togglePause() }
     if(e.key.toLowerCase()==='i'){ this.toggle('inventory-panel') }
     if(e.key.toLowerCase()==='m'){ this.toggle('map-panel') }
@@ -202,14 +206,17 @@ export class Game{
     if(e.key.toLowerCase()==='e'){ this.tryInteract() }
     if(e.key.toLowerCase()==='q'){ if(this.train.inTrain) this.accelerate() }
     if(e.key.toLowerCase()==='r' && this.weapon!=='pistol'){ this.tryRepair() }
-    if(e.key==='1'){ this.weapon='sword'; showNotif('Espada equipada') }
-    if(e.key==='2'){ this.weapon='pistol'; showNotif('Pistola equipada') }
     if(e.key.toLowerCase()==='f' && this.train.inTrain){ this.train.inTrain=false; showNotif('Saiu do trem'); }
     if(e.key.toLowerCase()==='r' && e.ctrlKey){ e.preventDefault(); this.pistol.reload(); showNotif('Recarregando...') }
     if(e.key==='r' && !e.ctrlKey && this.weapon==='pistol'){ /* reload handled via R */ }
     if(e.key.toLowerCase()==='r' && this.weapon==='pistol'){ this.pistol.reload(); showNotif(`Recarregado ${this.pistol.mag}/6`); }
     if(e.key.toLowerCase()==='h' && this.train.inTrain){ showNotif('🚂 BUZINA! Piiiii!') }
     if(e.key.toLowerCase()==='b'){ this.placeStation(); }
+  }
+  equipWeapon(weapon){
+    if(weapon!=='sword' && weapon!=='pistol') return;
+    this.weapon=weapon;
+    showNotif(weapon==='sword'?'Espada equipada':'Pistola equipada');
   }
   createStation(type, x, z, starter=false){
     const isTable=type==='crafting_table';
@@ -498,6 +505,7 @@ export class Game{
         if(data.player.train && Number.isFinite(data.player.train.x) && Number.isFinite(data.player.train.z)) this.train={...this.train,...data.player.train};
       }
       if(data.quests) this.quests.quests=data.quests;
+      hotbarFromJSON(data.hotbar);
       if(data.world){ this.brokenRepaired=!!data.world.brokenRepaired; this.forestLoaded=!!data.world.forestLoaded; if(this.brokenRepaired && this.railObj?.broken) this.railObj.broken.visible=false; if(this.forestLoaded) this.loadForest(); }
     }catch{}
   }
@@ -636,7 +644,7 @@ export class Game{
     this._saveCd=(this._saveCd||0)-dt; if(this._saveCd<=0){ this._saveCd=12; this.doSave(true) }
   }
   doSave(silent){
-    const data={player:{level:this.player.level,xp:this.player.xp,coins:this.player.coins,pos:this.player.pos,train:this.train},inventory:inventory.toJSON(),quests:this.quests.quests, world:{brokenRepaired:this.brokenRepaired, forestLoaded:this.forestLoaded}};
+    const data={player:{level:this.player.level,xp:this.player.xp,coins:this.player.coins,pos:this.player.pos,train:this.train},inventory:inventory.toJSON(),hotbar:hotbarToJSON(),quests:this.quests.quests, world:{brokenRepaired:this.brokenRepaired, forestLoaded:this.forestLoaded}};
     this.saveMgr.save(data); if(!silent) showNotif('Jogo salvo'); document.getElementById('btn-continuar').disabled=false;
   }
   loop(){

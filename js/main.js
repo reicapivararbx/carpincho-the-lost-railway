@@ -5,6 +5,7 @@ import { inventory } from './inventory/inventory.js';
 import { craft } from './crafting/crafting.js';
 import { showNotif } from './ui/ui.js';
 import { Multiplayer } from './multiplayer/multiplayer.js';
+import { renderHotbar } from './ui/hotbar.js';
 
 let game=null;
 let multiplayer=null;
@@ -105,6 +106,7 @@ function initMenu(){
   });
   // quick recipes click
   renderRecipes('hand', 1);
+  renderHotbar();
   // check save
   const has=localStorage.getItem('carpincho_save');
   if(has) $('btn-continuar').disabled=false;
