@@ -26,6 +26,7 @@ import { RecipeDB } from './data/recipes.js';
 import { AudioManager } from './audio/audioManager.js';
 import { DayNight } from './world/dayNight.js';
 import { Weather } from './world/weather.js';
+import { WorldStreaming } from './world/worldStreaming.js';
 import { hotbar, selectHotbar, renderHotbar, hotbarFromJSON, hotbarToJSON, selectedItem } from './ui/hotbar.js';
 
 export class Game{
@@ -44,6 +45,7 @@ export class Game{
     this.clock=new THREE.Clock();
     this.weather='sol'; this.timeOfDay='dia'; this.fps=0;
     this.dayNight=new DayNight(); this.dayNight.time=9; this.weatherSystem=new Weather();
+    this.worldStreaming=new WorldStreaming({chunkSize:32,loadRadius:2});
     this.player=new Player();
     this.quests=new QuestManager();
     this.cutscene=new CutsceneManager();
@@ -576,6 +578,8 @@ export class Game{
     });
   }
   update(dt){
+    this._streamTimer=(this._streamTimer||0)-dt;
+    if(this._streamTimer<=0){ this._streamTimer=.5; this.worldStreaming.update(this.player.pos); }
     this.dayNight.tick(dt); this.timeOfDay=this.dayNight.phase();
     const night=this.timeOfDay==='noite'||this.timeOfDay==='madrugada';
     if(this.scene.fog) this.scene.fog.near=night?35:60;
