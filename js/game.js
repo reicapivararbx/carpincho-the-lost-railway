@@ -126,8 +126,10 @@ export class Game{
     window.addEventListener('keydown',e=>this.onKey(e,true));
     window.addEventListener('keyup',e=>this.onKey(e,false));
     window.addEventListener('mousedown',e=>{ if(e.button===0) this.onShoot(); if(e.button===2) this.weapon=this.weapon==='sword'?'pistol':'sword'; });
-    canvas.addEventListener('mousemove',e=>{ this.mouse.dx=e.movementX||0; this.mouse.dy=e.movementY||0; if(e.buttons===1){ this.yaw-=this.mouse.dx*0.004; this.pitch=Math.max(0.1,Math.min(1.1,this.pitch - this.mouse.dy*0.004)); }});
-    canvas.addEventListener('click',()=>canvas.requestPointerLock?.());
+    // Use the canvas owned by this Game instance. Referencing the old local
+    // constructor argument here caused `canvas is not defined` in init().
+    this.canvas.addEventListener('mousemove',e=>{ this.mouse.dx=e.movementX||0; this.mouse.dy=e.movementY||0; if(e.buttons===1){ this.yaw-=this.mouse.dx*0.004; this.pitch=Math.max(0.1,Math.min(1.1,this.pitch - this.mouse.dy*0.004)); }});
+    this.canvas.addEventListener('click',()=>this.canvas.requestPointerLock?.());
     window.addEventListener('resize',()=>this.onResize());
     // inventory listener
     inventory.onChange(()=>{ renderInventory(); this.updateQuestHUD() });
