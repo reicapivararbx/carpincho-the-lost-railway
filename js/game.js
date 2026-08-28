@@ -57,6 +57,7 @@ export class Game{
     this.pistol=new Pistol();
     this.weapon='sword'; // sword|pistol
     this.train={x:0, z:10, speed:0, fuel:80, integ:100, weight:1200, inTrain:false};
+    this.state='ON_FOOT';
     this.trainEnterPoint={x:0,z:7.4}; this.driverSeat={x:0,z:10,y:1.9}; this.trainExitPoint={x:0,z:7.4};
     this.keys={};
     this.jumpVelocity=0; this.grounded=true;
@@ -209,6 +210,7 @@ export class Game{
   onKey(e, down){
     this.keys[e.key.toLowerCase()]=down;
     if(!down) return;
+    if(this.state==='DEAD' && e.key!=='Escape') return;
     if(e.key==='Escape'){ this.togglePause() }
     const uiLocked=['inventory-panel','crafting-panel','furnace-panel','map-panel','quests-panel','pause-menu','death-screen','cutscene'].some(id=>{const el=document.getElementById(id); return el && (el.classList.contains('active') || (id==='death-screen' && el.style.display!=='none'));});
     if(uiLocked && !['escape','i','m','j'].includes(e.key.toLowerCase())) return;
@@ -219,7 +221,7 @@ export class Game{
     if(e.key.toLowerCase()==='e'){ this.tryInteract() }
     if(e.key.toLowerCase()==='q'){ if(this.train.inTrain) this.accelerate() }
     if(e.key.toLowerCase()==='r' && this.weapon!=='pistol'){ this.tryRepair() }
-    if(e.key.toLowerCase()==='f' && this.train.inTrain){ this.train.inTrain=false; this.player.pos={x:this.train.x+this.trainExitPoint.x,z:this.train.z+this.trainExitPoint.z,y:.9}; showNotif('Saiu do trem'); }
+    if(e.key.toLowerCase()==='f' && (this.state==='IN_TRAIN'||this.state==='DRIVING')){ this.train.inTrain=false; this.state='ON_FOOT'; this.player.pos={x:this.train.x+this.trainExitPoint.x,z:this.train.z+this.trainExitPoint.z,y:.9}; showNotif('Saiu do trem'); }
     if(e.key.toLowerCase()==='r' && e.ctrlKey){ e.preventDefault(); this.pistol.reload(); showNotif('Recarregando...') }
     if(e.key==='r' && !e.ctrlKey && this.weapon==='pistol'){ /* reload handled via R */ }
     if(e.key.toLowerCase()==='r' && this.weapon==='pistol'){ this.pistol.reload(); showNotif(`Recarregado ${this.pistol.mag}/6`); }
@@ -336,7 +338,7 @@ export class Game{
     }
   }
   tryInteract(){
-    if(this.train.inTrain){ this.train.inTrain=false; this.player.pos={x:this.train.x+this.trainExitPoint.x,z:this.train.z+this.trainExitPoint.z,y:.9}; showNotif('Saiu do trem'); return; }
+    if(this.state==='IN_TRAIN'||this.state==='DRIVING'){ this.train.inTrain=false; this.state='EXITING_TRAIN'; this.player.pos={x:this.train.x+this.trainExitPoint.x,z:this.train.z+this.trainExitPoint.z,y:.9}; this.state='ON_FOOT'; showNotif('Saiu do trem'); return; }
     // near train?
     const dTrain=Math.hypot(this.player.pos.x - this.train.x, this.player.pos.z - this.train.z);
     if(dTrain<2.6){
@@ -354,10 +356,10 @@ export class Game{
       }
       // enter
       if(q && q.objectives[1].done){
-        this.train.inTrain=true; this.player.pos={x:this.train.x+this.driverSeat.x,z:this.train.z+this.driverSeat.z,y:this.driverSeat.y}; q.objectives[2].done=true; this.quests.checkComplete(q); showNotif('Entrou na cabine — Q para acelerar, E para frear, F para sair');
+        this.train.inTrain=true; this.state='IN_TRAIN'; this.player.pos={x:this.train.x+this.driverSeat.x,z:this.train.z+this.driverSeat.z,y:this.driverSeat.y}; q.objectives[2].done=true; this.quests.checkComplete(q); showNotif('Entrou na cabine — Q para acelerar, E para frear, F para sair');
         this.cutscene.play('Cabine: VELO 0 km/h, COMB  '+Math.round(this.train.fuel)+'%, INTEG '+Math.round(this.train.integ)+'%', ()=>{});
       } else {
-        this.train.inTrain=true; this.player.pos={x:this.train.x+this.driverSeat.x,z:this.train.z+this.driverSeat.z,y:this.driverSeat.y}; showNotif('Cabine');
+        this.train.inTrain=true; this.state='IN_TRAIN'; this.player.pos={x:this.train.x+this.driverSeat.x,z:this.train.z+this.driverSeat.z,y:this.driverSeat.y}; showNotif('Cabine');
       }
       return;
     }
@@ -603,12 +605,14 @@ export class Game{
       this.player.pos.z=Math.max(-45,Math.min(45,this.player.pos.z));
       if(this.playerMesh){ this.playerMesh.position.set(this.player.pos.x,this.player.pos.y,this.player.pos.z); if(mv.lengthSq()>0.001) this.playerMesh.rotation.y=Math.atan2(mv.x,mv.z); }
       if(this.player.health.dead){
+        this.state='DEAD';
         document.getElementById('death-screen').style.display='flex';
       }
     } else {
       // in train: move train along Z? simple
       if(this.keys['e']){ this.train.speed=Math.max(0,this.train.speed-6*dt) }
       if(this.train.speed>0.01){
+        this.state='DRIVING';
         const slope=0; const weightFactor=1+ this.train.weight/5000;
         this.train.fuel=Math.max(0,this.train.fuel - Math.abs(this.train.speed)*0.03*dt*weightFactor);
         const nextX=this.train.x + this.train.speed*dt*0.6;
@@ -628,6 +632,8 @@ export class Game{
         // player follows train
         this.player.pos.x=this.train.x; this.player.pos.z=this.train.z; if(this.playerMesh) this.playerMesh.position.set(this.player.pos.x,0.9,this.player.pos.z);
         if(this.train.fuel<=0) this.train.speed=0;
+      } else if(this.state==='DRIVING') {
+        this.state='IN_TRAIN';
       }
       this.player.stamina.regen(dt);
     }
