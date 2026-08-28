@@ -32,6 +32,9 @@ export class Game{
     this.scene.background=new THREE.Color(0x87ceeb);
     this.scene.fog=new THREE.Fog(0x87ceeb, 60, 180);
     this.renderer=new THREE.WebGLRenderer({canvas, antialias:true});
+    this.renderer.outputColorSpace=THREE.SRGBColorSpace;
+    this.renderer.toneMapping=THREE.ACESFilmicToneMapping;
+    this.renderer.toneMappingExposure=1.15;
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.shadowMap.enabled=true;
     this.camera=new THREE.PerspectiveCamera(65, window.innerWidth/window.innerHeight, 0.1, 500);
@@ -53,6 +56,8 @@ export class Game{
     this.keys={};
     this.mouse={x:0,y:0,down:false,dx:0,dy:0};
     this.yaw=-0.4; this.pitch=0.25; this.dist=9;
+    // Safe first frame: avoid a blank/ground-only view while the camera eases in.
+    this.camera.position.set(-3.5, 5.6, 18.3);
     this.resources=[];
     this.stations=[];
     this.remotePlayers=new Map(); this.multiplayer=null; this.networkTimer=0;
@@ -482,7 +487,14 @@ export class Game{
   applySave(data){
     try{
       if(data.inventory) inventory.fromJSON(data.inventory);
-      if(data.player){ this.player.level=data.player.level||1; this.player.xp=data.player.xp||0; this.player.coins=data.player.coins||100; this.player.pos=data.player.pos||this.player.pos; if(data.player.train) this.train=data.player.train; }
+      if(data.player){
+        this.player.level=Number.isFinite(data.player.level)?data.player.level:1;
+        this.player.xp=Number.isFinite(data.player.xp)?data.player.xp:0;
+        this.player.coins=Number.isFinite(data.player.coins)?data.player.coins:100;
+        const p=data.player.pos;
+        if(p && Number.isFinite(p.x) && Number.isFinite(p.z)) this.player.pos={x:p.x,y:Number.isFinite(p.y)?p.y:.9,z:p.z};
+        if(data.player.train && Number.isFinite(data.player.train.x) && Number.isFinite(data.player.train.z)) this.train={...this.train,...data.player.train};
+      }
       if(data.quests) this.quests.quests=data.quests;
       if(data.world){ this.brokenRepaired=!!data.world.brokenRepaired; this.forestLoaded=!!data.world.forestLoaded; if(this.brokenRepaired && this.railObj?.broken) this.railObj.broken.visible=false; if(this.forestLoaded) this.loadForest(); }
     }catch{}
