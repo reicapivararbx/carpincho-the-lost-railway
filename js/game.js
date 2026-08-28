@@ -93,6 +93,12 @@ export class Game{
     // station
     const stationGeo=new THREE.BoxGeometry(6,3,4); const stationMat=new THREE.MeshStandardMaterial({color:0x8B4513});
     const station=new THREE.Mesh(stationGeo, stationMat); station.position.set(2,1.5,12); station.castShadow=true; this.scene.add(station);
+    this.npcs=[];
+    const mechanic=new THREE.Group();
+    const npcBody=new THREE.Mesh(new THREE.CapsuleGeometry(.32,.7,4,8),new THREE.MeshStandardMaterial({color:0x2d6a9f,roughness:.8})); npcBody.position.y=.7; mechanic.add(npcBody);
+    const npcHead=new THREE.Mesh(new THREE.SphereGeometry(.3,12,8),new THREE.MeshStandardMaterial({color:0xc49a6c,roughness:1})); npcHead.position.y=1.35; mechanic.add(npcHead);
+    const wrench=new THREE.Mesh(new THREE.BoxGeometry(.08,.08,.45),new THREE.MeshStandardMaterial({color:0xb8c0c8,metalness:.8})); wrench.position.set(.32,.75,-.18); wrench.rotation.x=Math.PI/3; mechanic.add(wrench);
+    mechanic.position.set(5,0,10); this.scene.add(mechanic); this.npcs.push({id:'mechanic',name:'Mecânico',x:5,z:10,mesh:mechanic,dialogue:'Os trilhos do norte ainda podem ser reparados. Recolha sucata e lingotes para recuperar a locomotiva.'});
     // The first crafting stations are built by the player; none are pre-placed.
     // capybara mesh
     const capyGroup=new THREE.Group();
@@ -385,6 +391,11 @@ export class Game{
         this.openCrafting(station.type);
         showNotif(station.type==='furnace'?'Fornalha aberta':'Mesa de Crafting aberta');
         return;
+      }
+    }
+    for(const npc of this.npcs){
+      if(Math.hypot(npc.x-this.player.pos.x,npc.z-this.player.pos.z)<2.3){
+        this.cutscene.play(`${npc.name}: ${npc.dialogue}`,()=>{}); showNotif('Novo diálogo registrado no diário'); return;
       }
     }
     // near resource?
