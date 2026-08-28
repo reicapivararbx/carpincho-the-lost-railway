@@ -57,8 +57,8 @@ function initMenu(){
       else if(message.type==='JOINED'){ status.textContent=`Entrou na sala: ${message.payload.code}`; launchMultiplayer(message.payload.code); }
       else if(message.type==='ERROR') status.textContent=message.payload.msg;
     });
-    const host=location.hostname||'localhost';
-    await multiplayer.connect(`${location.protocol==='https:'?'wss':'ws'}://${host}:3000`);
+    const wsProtocol=location.protocol==='https:'?'wss':'ws';
+    await multiplayer.connect(`${wsProtocol}://${location.host}/railsgame/ws`);
     return multiplayer;
   };
   $('btn-mp-create').onclick=async()=>{
