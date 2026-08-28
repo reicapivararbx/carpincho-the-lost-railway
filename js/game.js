@@ -176,8 +176,8 @@ export class Game{
     spots.forEach(([x,z],i)=>{
       const mob=spawnMob(this.forestLoaded?(i%2===0?'spore':'wolf'):(i%2===0?'slime':'boar'), x, z);
       if(!mob) return;
-      const geo=new THREE.CapsuleGeometry(0.4,0.8,4,8);
-      const mat=new THREE.MeshStandardMaterial({color: i%2===0?0x2ecc71:0xe67e22,roughness:.7,emissive:i%2===0?0x092d16:0x321407,emissiveIntensity:.35});
+      const geo=mob.id==='slime' ? new THREE.SphereGeometry(.58,12,8) : mob.id==='boar' ? new THREE.ConeGeometry(.62,1.25,6) : mob.id==='spore' ? new THREE.DodecahedronGeometry(.62) : new THREE.CapsuleGeometry(0.4,0.8,4,8);
+      const mat=new THREE.MeshStandardMaterial({color: mob.id==='slime'?0x2ecc71:mob.id==='boar'?0x8b4513:mob.id==='spore'?0x9b59b6:0xe67e22,roughness:.7,emissive:mob.id==='spore'?0x260c33:0x321407,emissiveIntensity:.35});
       const mesh=new THREE.Mesh(geo,mat); mesh.position.set(x,0.8,z); this.scene.add(mesh);
       [-.13,.13].forEach(offset=>{ const eye=new THREE.Mesh(new THREE.SphereGeometry(.07,8,8),new THREE.MeshStandardMaterial({color:0xfef3c7,emissive:0xffdd55,emissiveIntensity:1})); eye.position.set(offset,.22,.34); mesh.add(eye); });
       const aura=new THREE.Mesh(new THREE.TorusGeometry(.52,.025,6,18),new THREE.MeshBasicMaterial({color:i%2===0?0x42f59b:0xffb347,transparent:true,opacity:.7})); aura.rotation.x=Math.PI/2; aura.position.y=-.37; mesh.add(aura);
@@ -628,7 +628,7 @@ export class Game{
     for(const en of this.enemies){
       if(en.state==='DEAD') continue;
       en.ai.update(dt, this.player.pos);
-      if(en.mesh){ en.mesh.position.set(en.x,0.8,en.z) }
+      if(en.mesh){ en.mesh.position.set(en.x,0.8,en.z); en.mesh.rotation.y += (en.state==='PATROL'?0.35:1.1)*dt; const bob=en.state==='IDLE'||en.state==='PATROL'?Math.sin(performance.now()/240+en.x)*.035:0; en.mesh.position.y=.8+bob; }
       if(en.state==='ATTACK'){
         // damage player every 1s
         en._cd=(en._cd||0)-dt; if(en._cd<=0){ en._cd=1.1; this.player.health.damage(en.damage||8); showNotif(`-${en.damage} de ${en.name}`); }
