@@ -1,5 +1,6 @@
 /* game specific */
 #game.active{display:block}
+#game-canvas{display:block;width:100%;height:100%;position:absolute;inset:0;outline:none}
 #config.active{display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.8)}
 .transition{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 30%, #1a2e12 0%, #000 75%);display:none;align-items:center;justify-content:center;z-index:50;pointer-events:auto}
 .transition.active{display:flex;animation:fadeIn 0.4s ease}
