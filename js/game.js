@@ -56,6 +56,7 @@ export class Game{
     this.train={x:0, z:10, speed:0, fuel:80, integ:100, weight:1200, inTrain:false};
     this.trainEnterPoint={x:0,z:7.4}; this.driverSeat={x:0,z:10,y:1.9}; this.trainExitPoint={x:0,z:7.4};
     this.keys={};
+    this.jumpVelocity=0; this.grounded=true;
     this.mouse={x:0,y:0,down:false,dx:0,dy:0};
     this.yaw=-0.4; this.pitch=0.25; this.dist=9;
     // Safe first frame: avoid a blank/ground-only view while the camera eases in.
@@ -205,8 +206,10 @@ export class Game{
   onKey(e, down){
     this.keys[e.key.toLowerCase()]=down;
     if(!down) return;
-    if(/^[1-9]$/.test(e.key)){ selectHotbar(Number(e.key)-1); return; }
     if(e.key==='Escape'){ this.togglePause() }
+    const uiLocked=['inventory-panel','crafting-panel','furnace-panel','map-panel','quests-panel','pause-menu','death-screen','cutscene'].some(id=>{const el=document.getElementById(id); return el && (el.classList.contains('active') || (id==='death-screen' && el.style.display!=='none'));});
+    if(uiLocked && !['escape','i','m','j'].includes(e.key.toLowerCase())) return;
+    if(/^[1-9]$/.test(e.key)){ selectHotbar(Number(e.key)-1); return; }
     if(e.key.toLowerCase()==='i'){ this.toggle('inventory-panel') }
     if(e.key.toLowerCase()==='m'){ this.toggle('map-panel') }
     if(e.key.toLowerCase()==='j'){ this.toggle('quests-panel') }
@@ -219,6 +222,7 @@ export class Game{
     if(e.key.toLowerCase()==='r' && this.weapon==='pistol'){ this.pistol.reload(); showNotif(`Recarregado ${this.pistol.mag}/6`); }
     if(e.key.toLowerCase()==='h' && this.train.inTrain){ showNotif('🚂 BUZINA! Piiiii!') }
     if(e.key.toLowerCase()==='b'){ this.placeStation(); }
+    if(e.code==='Space' && this.grounded && !this.train.inTrain){ this.jumpVelocity=6.5; this.grounded=false; }
   }
   equipWeapon(weapon){
     if(weapon!=='sword' && weapon!=='pistol') return;
@@ -545,6 +549,10 @@ export class Game{
     });
   }
   update(dt){
+    if(!this.train.inTrain){
+      this.jumpVelocity-=18*dt; this.player.pos.y+=this.jumpVelocity*dt;
+      if(this.player.pos.y<=.9){ this.player.pos.y=.9; this.jumpVelocity=0; this.grounded=true; }
+    }
     // player movement
     if(!this.train.inTrain){
       const fwd=new THREE.Vector3(); this.camera.getWorldDirection(fwd); fwd.y=0; fwd.normalize();
@@ -561,7 +569,6 @@ export class Game{
         if(!sprint) this.player.stamina.regen(dt); else this.player.stamina.regen(dt*0.2);
         this.player.pos.x+=mv.x*spd*dt; this.player.pos.z+=mv.z*spd*dt;
       } else this.player.stamina.regen(dt);
-      if(this.keys[' ']){ /* jump stub */ }
       if(!this.brokenRepaired && this.player.pos.x>13.2 && Math.abs(this.player.pos.z-10)<4){
         this.player.pos.x=13.2;
         const pr=document.getElementById('prompt'); if(pr) pr.textContent='⛔ Trilho quebrado — pressione R com 3 sucata +2 lingotes';
@@ -575,7 +582,7 @@ export class Game{
       // clamp
       this.player.pos.x=Math.max(-45,Math.min(45,this.player.pos.x));
       this.player.pos.z=Math.max(-45,Math.min(45,this.player.pos.z));
-      if(this.playerMesh){ this.playerMesh.position.set(this.player.pos.x,0.9,this.player.pos.z); this.playerMesh.rotation.y=Math.atan2(mv.x,mv.z); }
+      if(this.playerMesh){ this.playerMesh.position.set(this.player.pos.x,this.player.pos.y,this.player.pos.z); if(mv.lengthSq()>0.001) this.playerMesh.rotation.y=Math.atan2(mv.x,mv.z); }
       if(this.player.health.dead){
         document.getElementById('death-screen').style.display='flex';
       }
@@ -636,7 +643,7 @@ export class Game{
       }
     }
     // camera
-    const target=this.train.inTrain? new THREE.Vector3(this.train.x,1,this.train.z) : new THREE.Vector3(this.player.pos.x,0.9,this.player.pos.z);
+    const target=this.train.inTrain? new THREE.Vector3(this.train.x,this.driverSeat.y,this.train.z) : new THREE.Vector3(this.player.pos.x,this.player.pos.y,this.player.pos.z);
     const camX=target.x + Math.sin(this.yaw)*this.dist;
     const camZ=target.z + Math.cos(this.yaw)*this.dist;
     const camY=target.y + 4 + Math.sin(this.pitch)*3;
