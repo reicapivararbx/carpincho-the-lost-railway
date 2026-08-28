@@ -11,11 +11,12 @@ const wss = new WebSocketServer({ server });
 
 const rooms = new Map(); // code -> {code, players: Map<id, ws>, max}
 const players = new Map(); // ws -> {id, name, room}
+const damageCooldown = new WeakMap();
 
 function genCode(){ return Math.random().toString(36).slice(2,6).toUpperCase(); }
 function validateDamage(weaponId){
   const damages={sword_iron:15,pistol_basic:25};
-  return damages[weaponId]||10;
+  return Number.isFinite(damages[weaponId])?damages[weaponId]:null;
 }
 function validateCraft(recipeId, inv={}, station='crafting_table', level=0){
   const recipe=RecipeDB.lookup(recipeId); if(!recipe) return {ok:false,reason:'receita inexistente'};
@@ -57,6 +58,10 @@ wss.on('connection', ws=>{
       room.players.forEach((other,oid)=>{ if(oid!==id) other.send(JSON.stringify({type:'PLAYER_STATE', payload:{playerId:id,...payload}})) });
     } else if(type==='DAMAGE_REQUEST'){
       const dmg=validateDamage(payload.weaponId);
+      if(!dmg || typeof payload.targetId!=='string' || payload.targetId.length>80) return ws.send(JSON.stringify({type:'ERROR',payload:{msg:'pedido de dano inválido'}}));
+      const now=Date.now(); const last=damageCooldown.get(ws)||0;
+      if(now-last<120) return;
+      damageCooldown.set(ws,now);
       // server authoritative: compute hp? stub broadcast
       const room=pl.room && rooms.get(pl.room);
       if(room) room.players.forEach(o=> o.send(JSON.stringify({type:'DAMAGE_RESULT', payload:{targetId:payload.targetId, damage:dmg, from:id}})));
