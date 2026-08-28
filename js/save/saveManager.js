@@ -1,3 +1,6 @@
+import { migrate } from './migration.js';
+import { validate } from './validation.js';
+
 export class SaveManager{
   key='carpincho_save';
   save(data){
@@ -17,7 +20,8 @@ export class SaveManager{
   load(){
     try{
       const raw=localStorage.getItem(this.key) || localStorage.getItem(this.key+':backup');
-      if(!raw) return null; const parsed=JSON.parse(raw); return parsed?.data||null;
+      if(!raw) return null; const parsed=JSON.parse(raw); const data=migrate(parsed?.data,parsed?.v);
+      return validate(data)?data:null;
     }catch{ return null }
   }
   has(){ return !!localStorage.getItem(this.key) }
