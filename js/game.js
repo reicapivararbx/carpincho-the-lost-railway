@@ -91,6 +91,12 @@ export class Game{
     const body=new THREE.Mesh(new THREE.CapsuleGeometry(0.45,0.9,4,8), new THREE.MeshStandardMaterial({color:0xc49a6c})); body.rotation.z=Math.PI/2; capyGroup.add(body);
     const head=new THREE.Mesh(new THREE.SphereGeometry(0.42,16,16), new THREE.MeshStandardMaterial({color:0xc49a6c})); head.position.set(0.65,0.35,0); capyGroup.add(head);
     const nose=new THREE.Mesh(new THREE.SphereGeometry(0.12,8,8), new THREE.MeshStandardMaterial({color:0x5a3e1b})); nose.position.set(0.95,0.25,0); capyGroup.add(nose);
+    // Readable first-person-side weapon sockets attached to the capybara.
+    const rightHand=new THREE.Group(); rightHand.name='rightHand'; rightHand.position.set(.35,.15,-.42); capyGroup.add(rightHand);
+    const swordMesh=new THREE.Mesh(new THREE.BoxGeometry(.08,.08,.95),new THREE.MeshStandardMaterial({color:0xd8e5ef,metalness:.8,roughness:.25})); swordMesh.position.z=-.42; swordMesh.rotation.x=-.18; rightHand.add(swordMesh);
+    const swordGrip=new THREE.Mesh(new THREE.CylinderGeometry(.07,.07,.22,8),new THREE.MeshStandardMaterial({color:0x5a3e1b})); swordGrip.position.z=.1; rightHand.add(swordGrip);
+    const pistolMesh=new THREE.Mesh(new THREE.BoxGeometry(.14,.16,.42),new THREE.MeshStandardMaterial({color:0x22252a,metalness:.65,roughness:.35})); pistolMesh.position.z=-.2; pistolMesh.visible=false; rightHand.add(pistolMesh);
+    this.weaponMeshes={sword:swordMesh,pistol:pistolMesh};
     capyGroup.position.set(0,0.9,0); this.scene.add(capyGroup); this.playerMesh=capyGroup;
     // train mesh
     const trainGroup=new THREE.Group();
@@ -127,7 +133,7 @@ export class Game{
     // input
     window.addEventListener('keydown',e=>this.onKey(e,true));
     window.addEventListener('keyup',e=>this.onKey(e,false));
-    window.addEventListener('mousedown',e=>{ if(e.button===0) this.onShoot(); if(e.button===2) this.weapon=this.weapon==='sword'?'pistol':'sword'; });
+    window.addEventListener('mousedown',e=>{ if(e.button===0) this.onShoot(); if(e.button===2) this.equipWeapon(this.weapon==='sword'?'pistol':'sword'); });
     // Use the canvas owned by this Game instance. Referencing the old local
     // constructor argument here caused `canvas is not defined` in init().
     this.canvas.addEventListener('mousemove',e=>{ this.mouse.dx=e.movementX||0; this.mouse.dy=e.movementY||0; if(e.buttons===1){ this.yaw-=this.mouse.dx*0.004; this.pitch=Math.max(0.1,Math.min(1.1,this.pitch - this.mouse.dy*0.004)); }});
@@ -217,6 +223,7 @@ export class Game{
   equipWeapon(weapon){
     if(weapon!=='sword' && weapon!=='pistol') return;
     this.weapon=weapon;
+    if(this.weaponMeshes){ this.weaponMeshes.sword.visible=weapon==='sword'; this.weaponMeshes.pistol.visible=weapon==='pistol'; }
     showNotif(weapon==='sword'?'Espada equipada':'Pistola equipada');
   }
   createStation(type, x, z, starter=false){
