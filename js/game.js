@@ -47,7 +47,7 @@ export class Game{
     this.dayNight=new DayNight(); this.dayNight.time=9; this.weatherSystem=new Weather();
     this.worldStreaming=new WorldStreaming({chunkSize:32,loadRadius:2});
     this.player=new Player();
-    this.quests=new QuestManager();
+    this.quests=new QuestManager(this.player, inventory);
     this.cutscene=new CutsceneManager();
     this.audio=new AudioManager();
     this.saveMgr=new SaveManager();
