@@ -29,7 +29,7 @@ function validateCraft(recipeId, inv={}, station='crafting_table', level=0){
 
 wss.on('connection', ws=>{
   const id='p_'+Math.random().toString(36).slice(2,7);
-  players.set(ws,{id, room:null});
+  players.set(ws,{id, room:null, x:0, z:0, lastStateAt:Date.now(), hasState:false});
   ws.send(JSON.stringify({type:'WELCOME', payload:{playerId:id}}));
 
   ws.on('message', raw=>{
@@ -55,6 +55,12 @@ wss.on('connection', ws=>{
       // Reject malformed or impossible client movement before relaying it.
       if(!payload || !['x','z','speed'].every(key=>Number.isFinite(payload[key]))) return;
       if(Math.abs(payload.x)>100 || Math.abs(payload.z)>100 || payload.speed<0 || payload.speed>15) return;
+      const elapsed=Math.min(1.5,Math.max(.01,(Date.now()-pl.lastStateAt)/1000));
+      const distance=Math.hypot(payload.x-pl.x,payload.z-pl.z);
+      // Allow a small packet-jitter margin, but reject impossible teleports.
+      if(pl.hasState && distance>payload.speed*elapsed+2.5) return ws.send(JSON.stringify({type:'ERROR',payload:{msg:'movimento inválido'}}));
+      pl.x=payload.x; pl.z=payload.z; pl.lastStateAt=Date.now();
+      pl.hasState=true;
       room.players.forEach((other,oid)=>{ if(oid!==id) other.send(JSON.stringify({type:'PLAYER_STATE', payload:{playerId:id,...payload}})) });
     } else if(type==='DAMAGE_REQUEST'){
       const dmg=validateDamage(payload.weaponId);
