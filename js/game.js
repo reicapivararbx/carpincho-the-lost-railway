@@ -289,6 +289,7 @@ export class Game{
     if(this.weapon==='sword'){
       const now=performance.now()/1000; const c=this.sword.attack(now);
       if(!this.player.stamina.use(12)) { showNotif('Sem stamina!'); return; }
+      this.playerMesh && (this.playerMesh.userData.attackTimer=.28);
       // ray hit enemies within 2.2
       let hit=null; let best=2.4;
       for(const en of [...this.enemies, this.boss].filter(Boolean)){
@@ -618,6 +619,7 @@ export class Game{
         else this.playerMesh.userData.walkTime=(this.playerMesh.userData.walkTime||0)+dt*2;
         const moving=mv.lengthSq()>0.001; const stride=moving?Math.sin(this.playerMesh.userData.walkTime)*.035:Math.sin(this.playerMesh.userData.walkTime)*.012;
         this.playerMesh.rotation.z=stride;
+        if(this.playerMesh.userData.attackTimer>0){ this.playerMesh.userData.attackTimer-=dt; if(this.weaponMeshes?.sword) this.weaponMeshes.sword.rotation.y=Math.sin(this.playerMesh.userData.attackTimer*22)*.9; }
       }
       if(this.player.health.dead){
         this.state='DEAD';
