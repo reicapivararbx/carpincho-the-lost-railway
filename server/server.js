@@ -1,5 +1,6 @@
 import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
+import { RecipeDB } from '../js/data/recipes.js';
 
 const PORT = process.env.PORT || 3000;
 const server = createServer((req,res)=>{
@@ -16,9 +17,13 @@ function validateDamage(weaponId){
   const damages={sword_iron:15,pistol_basic:25};
   return damages[weaponId]||10;
 }
-function validateCraft(recipe, inv){
-  // stub: check station/level in real DB
-  return true;
+function validateCraft(recipeId, inv={}, station='crafting_table', level=0){
+  const recipe=RecipeDB.lookup(recipeId); if(!recipe) return {ok:false,reason:'receita inexistente'};
+  if(recipe.stationRequired!==station) return {ok:false,reason:'estação inválida'};
+  if(level<recipe.levelRequired) return {ok:false,reason:'nível insuficiente'};
+  const counts=inv && typeof inv==='object'?inv:{};
+  for(const ingredient of recipe.ingredients){ if(!Number.isFinite(counts[ingredient.item]) || counts[ingredient.item]<ingredient.amount) return {ok:false,reason:`ingrediente insuficiente: ${ingredient.item}`}; }
+  return {ok:true,recipe};
 }
 
 wss.on('connection', ws=>{
@@ -56,8 +61,9 @@ wss.on('connection', ws=>{
       const room=pl.room && rooms.get(pl.room);
       if(room) room.players.forEach(o=> o.send(JSON.stringify({type:'DAMAGE_RESULT', payload:{targetId:payload.targetId, damage:dmg, from:id}})));
     } else if(type==='CRAFT_REQUEST'){
-      if(!validateCraft(payload.recipeId, payload.inv)) return ws.send(JSON.stringify({type:'CRAFT_RESULT', payload:{ok:false, reason:'validação falhou'}}));
-      ws.send(JSON.stringify({type:'CRAFT_RESULT', payload:{ok:true, recipeId:payload.recipeId}}));
+      const result=validateCraft(payload?.recipeId,payload?.inv,payload?.station,payload?.level||0);
+      if(!result.ok) return ws.send(JSON.stringify({type:'CRAFT_RESULT', payload:result}));
+      ws.send(JSON.stringify({type:'CRAFT_RESULT', payload:{ok:true, recipeId:payload.recipeId, output:result.recipe.output, outputQuantity:result.recipe.outputQuantity}}));
     } else if(type==='CHAT'){
       const room=pl.room && rooms.get(pl.room);
       const text=(payload.text||'').slice(0,200);
