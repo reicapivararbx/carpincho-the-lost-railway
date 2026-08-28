@@ -240,6 +240,7 @@ export class Game{
       if(inventory.remove('bread',1)){ this.player.health.heal(20); showNotif('🍞 +20 VIDA'); }
       return;
     }
+    if(e.code==='Space' && this.state==='DRIVING'){ this.train.speed*=.15; showNotif('🛑 Freio de emergência'); return; }
     if(e.code==='Space' && this.grounded && !this.train.inTrain){ this.jumpVelocity=6.5; this.grounded=false; }
   }
   equipWeapon(weapon){
@@ -635,7 +636,7 @@ export class Game{
       }
     } else {
       // in train: move train along Z? simple
-      if(this.keys['e']){ this.train.speed=Math.max(0,this.train.speed-6*dt) }
+      if(this.keys['e']||this.keys['s']){ this.train.speed=Math.max(0,this.train.speed-6*dt) }
       if(this.train.speed>0.01){
         this.state='DRIVING';
         const slope=0; const weightFactor=1+ this.train.weight/5000;
