@@ -54,6 +54,7 @@ export class Game{
     this.pistol=new Pistol();
     this.weapon='sword'; // sword|pistol
     this.train={x:0, z:10, speed:0, fuel:80, integ:100, weight:1200, inTrain:false};
+    this.trainEnterPoint={x:0,z:7.4}; this.driverSeat={x:0,z:10,y:1.9}; this.trainExitPoint={x:0,z:7.4};
     this.keys={};
     this.mouse={x:0,y:0,down:false,dx:0,dy:0};
     this.yaw=-0.4; this.pitch=0.25; this.dist=9;
@@ -206,7 +207,7 @@ export class Game{
     if(e.key.toLowerCase()==='e'){ this.tryInteract() }
     if(e.key.toLowerCase()==='q'){ if(this.train.inTrain) this.accelerate() }
     if(e.key.toLowerCase()==='r' && this.weapon!=='pistol'){ this.tryRepair() }
-    if(e.key.toLowerCase()==='f' && this.train.inTrain){ this.train.inTrain=false; showNotif('Saiu do trem'); }
+    if(e.key.toLowerCase()==='f' && this.train.inTrain){ this.train.inTrain=false; this.player.pos={x:this.train.x+this.trainExitPoint.x,z:this.train.z+this.trainExitPoint.z,y:.9}; showNotif('Saiu do trem'); }
     if(e.key.toLowerCase()==='r' && e.ctrlKey){ e.preventDefault(); this.pistol.reload(); showNotif('Recarregando...') }
     if(e.key==='r' && !e.ctrlKey && this.weapon==='pistol'){ /* reload handled via R */ }
     if(e.key.toLowerCase()==='r' && this.weapon==='pistol'){ this.pistol.reload(); showNotif(`Recarregado ${this.pistol.mag}/6`); }
@@ -317,7 +318,7 @@ export class Game{
     }
   }
   tryInteract(){
-    if(this.train.inTrain){ this.train.inTrain=false; showNotif('Saiu do trem'); return; }
+    if(this.train.inTrain){ this.train.inTrain=false; this.player.pos={x:this.train.x+this.trainExitPoint.x,z:this.train.z+this.trainExitPoint.z,y:.9}; showNotif('Saiu do trem'); return; }
     // near train?
     const dTrain=Math.hypot(this.player.pos.x - this.train.x, this.player.pos.z - this.train.z);
     if(dTrain<2.6){
@@ -335,10 +336,10 @@ export class Game{
       }
       // enter
       if(q && q.objectives[1].done){
-        this.train.inTrain=true; q.objectives[2].done=true; this.quests.checkComplete(q); showNotif('Entrou na cabine — Q para acelerar, E para frear, F para sair');
+        this.train.inTrain=true; this.player.pos={x:this.train.x+this.driverSeat.x,z:this.train.z+this.driverSeat.z,y:this.driverSeat.y}; q.objectives[2].done=true; this.quests.checkComplete(q); showNotif('Entrou na cabine — Q para acelerar, E para frear, F para sair');
         this.cutscene.play('Cabine: VELO 0 km/h, COMB  '+Math.round(this.train.fuel)+'%, INTEG '+Math.round(this.train.integ)+'%', ()=>{});
       } else {
-        this.train.inTrain=true; showNotif('Cabine');
+        this.train.inTrain=true; this.player.pos={x:this.train.x+this.driverSeat.x,z:this.train.z+this.driverSeat.z,y:this.driverSeat.y}; showNotif('Cabine');
       }
       return;
     }
@@ -487,6 +488,13 @@ export class Game{
       list.appendChild(d);
     }
   }
+  renderObjective(){
+    const el=document.getElementById('objective-tracker'); if(!el) return;
+    const q=this.quests.active();
+    if(!q){ el.textContent='Nenhum objetivo ativo'; return; }
+    const next=q.objectives.find(o=>!o.done);
+    el.innerHTML=`<b>${q.name}</b><br>${next?`▸ ${next.description}`:'✓ Objetivos concluídos'}`;
+  }
   updateQuestHUD(){
     const q=this.quests.active();
     if(q){
@@ -562,7 +570,7 @@ export class Game{
       this.player.pos.z=Math.max(-45,Math.min(45,this.player.pos.z));
       if(this.playerMesh){ this.playerMesh.position.set(this.player.pos.x,0.9,this.player.pos.z); this.playerMesh.rotation.y=Math.atan2(mv.x,mv.z); }
       if(this.player.health.dead){
-        document.getElementById('death-screen').style.display='block';
+        document.getElementById('death-screen').style.display='flex';
       }
     } else {
       // in train: move train along Z? simple
@@ -632,6 +640,7 @@ export class Game{
     const fb=document.getElementById('furnace-bar'); if(fb) fb.style.width=(this.furnace.progress*100)+'%';
     // HUD
     updateHUD({hp: this.player.health.current, stamina: this.player.stamina.current, lv:this.player.level, xp:this.player.xp, coins:this.player.coins, fuel:this.train.fuel, integ:this.train.integ, weapon: this.weapon==='sword'?'⚔️ Espada' : `🔫 ${this.pistol.mag}/6`, region: this.player.pos.x>18?'Floresta':'Planície'});
+    this.renderObjective();
     for(const remote of this.remotePlayers.values()) remote.mesh.position.lerp(new THREE.Vector3(remote.x,.8,remote.z),Math.min(1,dt*12));
     if(this.multiplayer){
       this.networkTimer-=dt;
