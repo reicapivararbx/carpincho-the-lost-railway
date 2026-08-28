@@ -32,6 +32,7 @@ NPCDB="*res://Data/NPCDB.gd"
 LootDB="*res://Data/LootDB.gd"
 TrainDB="*res://Data/TrainDB.gd"
 UpgradeDB="*res://Data/UpgradeDB.gd"
+QuestManager="*res://Core/QuestManager.gd"
 
 [display]
 
