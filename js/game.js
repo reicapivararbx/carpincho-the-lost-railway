@@ -24,6 +24,8 @@ import { showNotif } from './ui/ui.js';
 import { rollLoot } from './data/lootTables.js';
 import { RecipeDB } from './data/recipes.js';
 import { AudioManager } from './audio/audioManager.js';
+import { DayNight } from './world/dayNight.js';
+import { Weather } from './world/weather.js';
 import { hotbar, selectHotbar, renderHotbar, hotbarFromJSON, hotbarToJSON, selectedItem } from './ui/hotbar.js';
 
 export class Game{
@@ -41,6 +43,7 @@ export class Game{
     this.camera=new THREE.PerspectiveCamera(65, window.innerWidth/window.innerHeight, 0.1, 500);
     this.clock=new THREE.Clock();
     this.weather='sol'; this.timeOfDay='dia'; this.fps=0;
+    this.dayNight=new DayNight(); this.dayNight.time=9; this.weatherSystem=new Weather();
     this.player=new Player();
     this.quests=new QuestManager();
     this.cutscene=new CutsceneManager();
@@ -78,7 +81,7 @@ export class Game{
   init(){
     // lights
     const amb=new THREE.HemisphereLight(0xffffff, 0x2d5a1e, 1.1); this.scene.add(amb);
-    const dir=new THREE.DirectionalLight(0xfff6e3, 1.2); dir.position.set(30,50,20); dir.castShadow=true; dir.shadow.mapSize.set(2048,2048); this.scene.add(dir);
+    const dir=new THREE.DirectionalLight(0xfff6e3, 1.2); dir.position.set(30,50,20); dir.castShadow=true; dir.shadow.mapSize.set(2048,2048); this.scene.add(dir); this.sunLight=dir;
     // terrain
     createTerrain(this.scene, THREE);
     // rails
@@ -166,7 +169,7 @@ export class Game{
       if(e.key==='F6'){ this.player.coins+=500; showNotif('F6 +500 coins'); }
       if(e.key==='F7'){ e.preventDefault(); const q=this.quests.active(); if(q){ q.objectives.forEach(o=>o.done=true); this.quests.checkComplete(q); showNotif(`F7: missão concluída — ${q.name}`); } }
       if(e.key==='F8'){ e.preventDefault(); this.weather=this.weather==='sol'?'neblina':'sol'; this.scene.fog.color.set(this.weather==='neblina'?0xb9c5bd:0x87ceeb); showNotif(`F8: clima ${this.weather}`); }
-      if(e.key==='F9'){ e.preventDefault(); this.timeOfDay=this.timeOfDay==='dia'?'noite':'dia'; this.scene.background.set(this.timeOfDay==='noite'?0x10182f:0x87ceeb); showNotif(`F9: ${this.timeOfDay}`); }
+      if(e.key==='F9'){ e.preventDefault(); this.dayNight.time=this.timeOfDay==='noite'?9:22; this.timeOfDay=this.dayNight.phase(); this.scene.background.set(this.timeOfDay==='noite'?0x10182f:0x87ceeb); showNotif(`F9: ${this.timeOfDay}`); }
     });
   }
   spawnEnemies(){
@@ -561,6 +564,10 @@ export class Game{
     });
   }
   update(dt){
+    this.dayNight.tick(dt); this.timeOfDay=this.dayNight.phase();
+    const night=this.timeOfDay==='noite'||this.timeOfDay==='madrugada';
+    if(this.scene.fog) this.scene.fog.near=night?35:60;
+    if(this.sunLight) this.sunLight.intensity=night?.28:1.2;
     if(!this.train.inTrain){
       this.jumpVelocity-=18*dt; this.player.pos.y+=this.jumpVelocity*dt;
       if(this.player.pos.y<=.9){ this.player.pos.y=.9; this.jumpVelocity=0; this.grounded=true; }
