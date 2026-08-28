@@ -112,9 +112,9 @@ Este documento descreve o trabalho restante para levar o projeto do MVP atual at
 
 ### 9. Multiplayer e segurança
 
-- [ ] Validar no servidor HP, dano, inventário, munição, XP, CapyCoins, loot, quests, crafting, transações e upgrades.
+- [ ] Validar no servidor HP, dano, inventário, munição, XP, CapyCoins, loot, quests e upgrades (crafting já valida receita, estação, nível e ingredientes).
 - [ ] Sincronizar jogadores, trem, mobs, chefes, loot e eventos por frequência/autoridade.
-- [ ] Implementar reconexão, saída do host, salas privadas, senha, convites e funções de jogador.
+- [ ] Implementar reconexão, saída do host, salas privadas, senha, convites e funções de jogador (serviço WebSocket básico já está ativo).
 - [ ] Adicionar chat de grupo/proximidade com filtro.
 - [ ] Criar testes de duplicação, velocidade impossível, dano impossível e crafting sem materiais.
 - [ ] Separar claramente player save e world save no servidor.
