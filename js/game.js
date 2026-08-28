@@ -159,8 +159,10 @@ export class Game{
       const mob=spawnMob(this.forestLoaded?(i%2===0?'spore':'wolf'):(i%2===0?'slime':'boar'), x, z);
       if(!mob) return;
       const geo=new THREE.CapsuleGeometry(0.4,0.8,4,8);
-      const mat=new THREE.MeshStandardMaterial({color: i%2===0?0x2ecc71:0xe67e22});
+      const mat=new THREE.MeshStandardMaterial({color: i%2===0?0x2ecc71:0xe67e22,roughness:.7,emissive:i%2===0?0x092d16:0x321407,emissiveIntensity:.35});
       const mesh=new THREE.Mesh(geo,mat); mesh.position.set(x,0.8,z); this.scene.add(mesh);
+      [-.13,.13].forEach(offset=>{ const eye=new THREE.Mesh(new THREE.SphereGeometry(.07,8,8),new THREE.MeshStandardMaterial({color:0xfef3c7,emissive:0xffdd55,emissiveIntensity:1})); eye.position.set(offset,.22,.34); mesh.add(eye); });
+      const aura=new THREE.Mesh(new THREE.TorusGeometry(.52,.025,6,18),new THREE.MeshBasicMaterial({color:i%2===0?0x42f59b:0xffb347,transparent:true,opacity:.7})); aura.rotation.x=Math.PI/2; aura.position.y=-.37; mesh.add(aura);
       mob.mesh=mesh; mob.ai=new EnemyAI(mob); this.enemies.push(mob);
     });
     if(this.forestLoaded){
