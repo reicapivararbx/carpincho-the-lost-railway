@@ -168,7 +168,7 @@ export class Game{
       if(e.key==='F5'){ e.preventDefault(); ['wood','stone','coal','iron_ore','iron_ingot','scrap'].forEach(id=>inventory.add(id,5)); showNotif('F5 +recursos'); }
       if(e.key==='F6'){ this.player.coins+=500; showNotif('F6 +500 coins'); }
       if(e.key==='F7'){ e.preventDefault(); const q=this.quests.active(); if(q){ q.objectives.forEach(o=>o.done=true); this.quests.checkComplete(q); showNotif(`F7: missão concluída — ${q.name}`); } }
-      if(e.key==='F8'){ e.preventDefault(); this.weather=this.weather==='sol'?'neblina':'sol'; this.scene.fog.color.set(this.weather==='neblina'?0xb9c5bd:0x87ceeb); showNotif(`F8: clima ${this.weather}`); }
+      if(e.key==='F8'){ e.preventDefault(); this.weather=this.weather==='sol'?'neblina':'sol'; this.weatherSystem.set(this.weather); this.scene.fog.color.set(this.weather==='neblina'?0xb9c5bd:0x87ceeb); this.scene.background.set(this.weather==='neblina'?0x9aa9a2:(this.timeOfDay==='noite'?0x10182f:0x87ceeb)); showNotif(`F8: clima ${this.weather}`); }
       if(e.key==='F9'){ e.preventDefault(); this.dayNight.time=this.timeOfDay==='noite'?9:22; this.timeOfDay=this.dayNight.phase(); this.scene.background.set(this.timeOfDay==='noite'?0x10182f:0x87ceeb); showNotif(`F9: ${this.timeOfDay}`); }
     });
   }

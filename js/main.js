@@ -96,7 +96,7 @@ function initMenu(){
     const sel=window._selectedRecipe;
     if(!sel) return;
     const res=craft(sel, window._selectedStation||'crafting_table', game?.player.level||0);
-    if(res.ok){ showNotif('Craftou '+res.recipe.name+' — pressione B para posicionar estruturas'); renderInventory(); renderRecipes(window._selectedStation, game?.player.level||1); } else showNotif(res.reason);
+    if(res.ok){ game?.advanceObjective('craft',res.recipe.output, res.recipe.outputQuantity||1); showNotif('Craftou '+res.recipe.name+' — pressione B para posicionar estruturas'); renderInventory(); renderRecipes(window._selectedStation, game?.player.level||1); } else showNotif(res.reason);
   });
   $('btn-smelt')?.addEventListener('click',()=>{
     if(inventory.has('iron_ore',1) && inventory.has('coal',1)){

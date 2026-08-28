@@ -22,7 +22,7 @@ export function renderInventory(){
       button.textContent=`${recipe.name} (${recipe.ingredients.map(i=>`${i.item} x${i.amount}`).join(', ')})`;
       button.onclick=()=>{
         const result=craft(recipe.id, 'hand', window.carpinchoGame?.player.level||1);
-        if(result.ok) renderInventory();
+        if(result.ok){ window.carpinchoGame?.advanceObjective('craft',result.recipe.output,result.recipe.outputQuantity||1); renderInventory(); }
       };
       quick.appendChild(button);
     }
