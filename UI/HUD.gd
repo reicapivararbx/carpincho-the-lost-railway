@@ -81,7 +81,7 @@ func _on_integrity_changed(current: float, maximum: float) -> void:
 	integrity_label.text = "🔧 %.0f%%" % pct
 
 func _on_region_discovered(region_id: String) -> void:
-	_on_notification("Region discovered: %s!" % RegionDB.get(region_id).get("name", region_id), "discovery")
+	_on_notification("Region discovered: %s!" % RegionDB.lookup(region_id).get("name", region_id), "discovery")
 
 func _on_notification(text: String, type: String = "info") -> void:
 	var label := Label.new()

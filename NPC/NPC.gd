@@ -8,7 +8,7 @@ var is_dialogue_active: bool = false
 
 func _ready() -> void:
 	if npc_data.is_empty() and npc_id != "":
-		npc_data = NPCDB.get(npc_id)
+		npc_data = NPCDB.lookup(npc_id)
 
 func get_interact_prompt() -> String:
 	if npc_data.is_empty():
@@ -30,7 +30,7 @@ func interact(interactor: Node3D) -> void:
 	for qid in quest_ids:
 		if qid not in completed and qid not in active:
 			# Offer quest
-			var quest_data := QuestDB.get(qid)
+			var quest_data := QuestDB.lookup(qid)
 			if not quest_data.is_empty():
 				EventBus.dialog_started.emit({
 					"speaker": npc_data.get("name", "NPC"),

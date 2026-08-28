@@ -156,7 +156,7 @@ func _ready() -> void:
 		},
 	}
 
-func get(id: String) -> Dictionary:
+func lookup(id: String) -> Dictionary:
 	return data.get(id, {})
 
 func get_all() -> Dictionary:
@@ -183,7 +183,7 @@ func get_available(player_level: int, owned_upgrades: Array) -> Array:
 	return results
 
 func can_afford(upgrade_id: String, coins: int, inventory: Array) -> Dictionary:
-	var upgrade := get(upgrade_id)
+	var upgrade := lookup(upgrade_id)
 	if upgrade.is_empty():
 		return {"can_afford": false, "reason": "Upgrade not found"}
 	if coins < upgrade.get("cost_coins", 0):

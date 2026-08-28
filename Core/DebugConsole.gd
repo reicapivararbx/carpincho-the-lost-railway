@@ -6,7 +6,7 @@ var debug_panel: Control = null
 
 func _ready() -> void:
 	if not OS.is_debug_build():
-		visible = false
+		is_visible = false
 		set_process(false)
 		return
 

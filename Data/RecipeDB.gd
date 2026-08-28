@@ -87,7 +87,7 @@ func _ready() -> void:
 		},
 	}
 
-func get(id: String) -> Dictionary:
+func lookup(id: String) -> Dictionary:
 	return data.get(id, {})
 
 func get_all() -> Dictionary:
@@ -101,7 +101,7 @@ func get_for_station(station_type: String) -> Array:
 	return results
 
 func can_craft(recipe_id: String, player_level: int, inventory: Array) -> Dictionary:
-	var recipe := get(recipe_id)
+	var recipe := lookup(recipe_id)
 	if recipe.is_empty():
 		return {"can_craft": false, "reason": "Recipe not found"}
 	if recipe.get("required_level", 1) > player_level:

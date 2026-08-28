@@ -11,7 +11,7 @@ extends Node3D
 var wagon_data: Dictionary = {}
 
 func _ready() -> void:
-	wagon_data = TrainDB.get(wagon_id)
+	wagon_data = TrainDB.lookup(wagon_id)
 	if not wagon_data.is_empty():
 		wagon_type = wagon_data.get("wagon_type", wagon_type)
 		max_cargo_kg = wagon_data.get("max_cargo_kg", max_cargo_kg)

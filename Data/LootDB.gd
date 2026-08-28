@@ -68,7 +68,7 @@ func _ready() -> void:
 	}
 
 func get_loot(table_id: String) -> Array:
-	var table := data.get(table_id, {})
+	var table: Dictionary = data.get(table_id, {})
 	if table.is_empty():
 		return []
 	var loot: Array = []

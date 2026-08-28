@@ -30,7 +30,7 @@ func _refresh() -> void:
 	active_list.clear()
 	for entry in QuestManager.active_quests:
 		var quest_id: String = entry.get("id", "")
-		var quest_def: Dictionary = QuestDB.get(quest_id)
+		var quest_def: Dictionary = QuestDB.lookup(quest_id)
 		var name: String = quest_def.get("name", quest_id)
 		var idx := active_list.add_item("► " + name)
 		active_list.set_item_metadata(idx, {"id": quest_id, "progress": entry.get("progress", {})})
@@ -42,7 +42,7 @@ func _refresh() -> void:
 	active_list.add_item("--- Completed ---")
 
 	for qid in QuestManager.completed_quests:
-		var quest_def: Dictionary = QuestDB.get(qid)
+		var quest_def: Dictionary = QuestDB.lookup(qid)
 		active_list.add_item("✓ " + quest_def.get("name", qid))
 
 func _on_quest_selected(index: int) -> void:
@@ -52,7 +52,7 @@ func _on_quest_selected(index: int) -> void:
 	var quest_id: String = meta.get("id", "")
 	if quest_id.is_empty():
 		return
-	var quest_def: Dictionary = QuestDB.get(quest_id)
+	var quest_def: Dictionary = QuestDB.lookup(quest_id)
 	detail_name.text = quest_def.get("name", "")
 	detail_desc.text = quest_def.get("description", "")
 
@@ -73,7 +73,7 @@ func _on_quest_selected(index: int) -> void:
 	if rewards.has("coins"):
 		rew_text += "  CapyCoins: %d\n" % rewards["coins"]
 	for item in rewards.get("items", []):
-		var item_data: Dictionary = ItemDB.get(item.get("id", ""))
+		var item_data: Dictionary = ItemDB.lookup(item.get("id", ""))
 		rew_text += "  %s x%d\n" % [item_data.get("name", item.get("id", "")), item.get("qty", 1)]
 	rewards_label.text = rew_text
 

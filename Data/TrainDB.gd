@@ -121,7 +121,7 @@ func _ready() -> void:
 		},
 	}
 
-func get(id: String) -> Dictionary:
+func lookup(id: String) -> Dictionary:
 	return data.get(id, {})
 
 func get_all() -> Dictionary:

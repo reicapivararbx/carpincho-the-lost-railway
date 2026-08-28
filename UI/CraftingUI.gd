@@ -52,7 +52,7 @@ func _refresh() -> void:
 			if not has_station:
 				continue
 
-		var result_item: Dictionary = ItemDB.get(recipe.get("output_id", ""))
+		var result_item: Dictionary = ItemDB.lookup(recipe.get("output_id", ""))
 		var result_name: String = result_item.get("name", recipe_id)
 		var qty: int = recipe.get("output_qty", 1)
 		var idx := recipe_list.add_item("%s x%d" % [result_name, qty])
@@ -63,7 +63,7 @@ func _on_recipe_selected(index: int) -> void:
 	var meta: Dictionary = recipe_list.get_item_metadata(index)
 	selected_recipe = meta.get("id", "")
 	var recipe: Dictionary = RecipeDB.get(selected_recipe)
-	var result_item: Dictionary = ItemDB.get(recipe.get("output_id", ""))
+	var result_item: Dictionary = ItemDB.lookup(recipe.get("output_id", ""))
 
 	detail_name.text = result_item.get("name", selected_recipe)
 	detail_desc.text = result_item.get("description", "")
@@ -71,7 +71,7 @@ func _on_recipe_selected(index: int) -> void:
 	var ing_text := "Ingredients:\n"
 	var inv: Array = SaveManager.get_player_data().get("inventory", [])
 	for ing in recipe.get("ingredients", []):
-		var item_data: Dictionary = ItemDB.get(ing["id"])
+		var item_data: Dictionary = ItemDB.lookup(ing["id"])
 		var have := _count_in_inv(inv, ing["id"])
 		var color := "✓" if have >= ing["qty"] else "✗"
 		ing_text += "%s %s x%d (have %d)\n" % [color, item_data.get("name", ing["id"]), ing["qty"], have]
@@ -102,7 +102,7 @@ func _on_craft_pressed() -> void:
 	stats["items_crafted"] = stats.get("items_crafted", 0) + 1
 	SaveManager.save_data["stats"] = stats
 
-	var result_item: Dictionary = ItemDB.get(output_id)
+	var result_item: Dictionary = ItemDB.lookup(output_id)
 	EventBus.crafting_completed.emit(selected_recipe)
 	EventBus.notification_requested.emit("Crafted %s x%d!" % [result_item.get("name", ""), output_qty], "success")
 	_refresh()

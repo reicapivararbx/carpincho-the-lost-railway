@@ -71,7 +71,7 @@ func _refresh() -> void:
 	# Fill with inventory items
 	for i in mini(inv.size(), MAX_SLOTS):
 		var entry: Dictionary = inv[i]
-		var item_data: Dictionary = ItemDB.get(entry.get("id", ""))
+		var item_data: Dictionary = ItemDB.lookup(entry.get("id", ""))
 		var qty: int = entry.get("quantity", 0)
 		var weight: float = item_data.get("weight", 0.0) * qty
 		current_weight += weight
@@ -100,7 +100,7 @@ func _update_info_panel() -> void:
 		return
 
 	var entry: Dictionary = inv[selected_slot]
-	var item_data: Dictionary = ItemDB.get(entry.get("id", ""))
+	var item_data: Dictionary = ItemDB.lookup(entry.get("id", ""))
 	item_name_label.text = item_data.get("name", entry.get("id", ""))
 	item_desc_label.text = item_data.get("description", "")
 	use_btn.visible = item_data.get("category", "") in ["consumable", "tool", "fuel"]
@@ -112,7 +112,7 @@ func _on_use_pressed() -> void:
 		return
 	var entry: Dictionary = inv[selected_slot]
 	var item_id: String = entry.get("id", "")
-	var item_data: Dictionary = ItemDB.get(item_id)
+	var item_data: Dictionary = ItemDB.lookup(item_id)
 
 	match item_data.get("category", ""):
 		"consumable":

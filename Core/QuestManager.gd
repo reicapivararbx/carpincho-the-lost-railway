@@ -19,7 +19,7 @@ func _load_quests() -> void:
 	failed_quests = quest_data.get("failed", [])
 
 func start_quest(quest_id: String) -> void:
-	var quest_def: Dictionary = QuestDB.get(quest_id)
+	var quest_def: Dictionary = QuestDB.lookup(quest_id)
 	if quest_def.is_empty():
 		return
 	if quest_id in completed_quests or quest_id in _get_active_ids():
@@ -44,7 +44,7 @@ func complete_quest(quest_id: String) -> void:
 	active_quests.remove_at(idx)
 	completed_quests.append(quest_id)
 
-	var quest_def: Dictionary = QuestDB.get(quest_id)
+	var quest_def: Dictionary = QuestDB.lookup(quest_id)
 	var rewards: Dictionary = quest_def.get("rewards", {})
 
 	# Grant rewards
@@ -83,7 +83,7 @@ func advance_objective(quest_id: String, objective_idx: int, amount: int = 1) ->
 	quest_entry["progress"] = progress
 
 	# Check if objective is complete
-	var quest_def: Dictionary = QuestDB.get(quest_id)
+	var quest_def: Dictionary = QuestDB.lookup(quest_id)
 	var objectives: Array = quest_def.get("objectives", [])
 	if objective_idx < objectives.size():
 		var obj: Dictionary = objectives[objective_idx]
@@ -141,7 +141,7 @@ func _save() -> void:
 func _on_inventory_changed(item_id: String, _qty: int) -> void:
 	for entry in active_quests:
 		var quest_id: String = entry.get("id", "")
-		var quest_def: Dictionary = QuestDB.get(quest_id)
+		var quest_def: Dictionary = QuestDB.lookup(quest_id)
 		for i in quest_def.get("objectives", []).size():
 			var obj: Dictionary = quest_def["objectives"][i]
 			if obj.get("type") == "collect" and obj.get("target") == item_id:
@@ -154,7 +154,7 @@ func _on_inventory_changed(item_id: String, _qty: int) -> void:
 func _on_location_discovered(location_id: String) -> void:
 	for entry in active_quests:
 		var quest_id: String = entry.get("id", "")
-		var quest_def: Dictionary = QuestDB.get(quest_id)
+		var quest_def: Dictionary = QuestDB.lookup(quest_id)
 		for i in quest_def.get("objectives", []).size():
 			var obj: Dictionary = quest_def["objectives"][i]
 			if obj.get("type") == "discover" and obj.get("target") == location_id:
@@ -166,7 +166,7 @@ func _on_region_discovered(region_id: String) -> void:
 func _on_near_interactable(node: Node3D) -> void:
 	for entry in active_quests:
 		var quest_id: String = entry.get("id", "")
-		var quest_def: Dictionary = QuestDB.get(quest_id)
+		var quest_def: Dictionary = QuestDB.lookup(quest_id)
 		for i in quest_def.get("objectives", []).size():
 			var obj: Dictionary = quest_def["objectives"][i]
 			if obj.get("type") == "interact":

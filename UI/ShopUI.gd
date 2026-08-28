@@ -28,13 +28,13 @@ func _on_shop_opened(shop_id: String) -> void:
 	current_shop_id = shop_id
 	# Find NPC data for this shop
 	for npc_id in NPCDB.get_all():
-		var npc: Dictionary = NPCDB.get(npc_id)
+		var npc: Dictionary = NPCDB.lookup(npc_id)
 		if npc.get("location", "") == shop_id or npc_id == shop_id:
 			shop_npc_data = npc
 			break
 	if shop_npc_data.is_empty():
 		# Try direct lookup
-		shop_npc_data = NPCDB.get(shop_id)
+		shop_npc_data = NPCDB.lookup(shop_id)
 
 	is_buy_mode = true
 	_refresh_ui()
@@ -55,7 +55,7 @@ func _load_items() -> void:
 		var shop_items: Array = shop_npc_data.get("shop_items", [])
 		var prices: Dictionary = shop_npc_data.get("shop_prices", {})
 		for item_id in shop_items:
-			var item_data: Dictionary = ItemDB.get(item_id)
+			var item_data: Dictionary = ItemDB.lookup(item_id)
 			if item_data.is_empty():
 				continue
 			var price: int = prices.get(item_id, item_data.get("value", 0))
@@ -64,7 +64,7 @@ func _load_items() -> void:
 	else:
 		var inv: Array = SaveManager.get_player_data().get("inventory", [])
 		for entry in inv:
-			var item_data: Dictionary = ItemDB.get(entry.get("id", ""))
+			var item_data: Dictionary = ItemDB.lookup(entry.get("id", ""))
 			if item_data.is_empty():
 				continue
 			var sell_price: int = maxi(1, item_data.get("value", 1) / 2)
@@ -95,7 +95,7 @@ func _on_confirm_pressed() -> void:
 		if SaveManager.remove_coins(price):
 			SaveManager.add_to_inventory(item_id, 1)
 			EventBus.item_bought.emit(item_id, price)
-			EventBus.notification_requested.emit("Bought %s!" % ItemDB.get(item_id).get("name", item_id), "success")
+			EventBus.notification_requested.emit("Bought %s!" % ItemDB.lookup(item_id).get("name", item_id), "success")
 		else:
 			EventBus.notification_requested.emit("Not enough CapyCoins!", "error")
 	else:
