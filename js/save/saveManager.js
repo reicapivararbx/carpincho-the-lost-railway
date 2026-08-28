@@ -2,7 +2,10 @@ export class SaveManager{
   key='carpincho_save';
   save(data){
     try{
-      localStorage.setItem(this.key, JSON.stringify({v:'0.1.0',data,ts:Date.now()}));
+      const payload={v:'0.1.0',data,ts:Date.now()};
+      const serialized=JSON.stringify(payload);
+      const previous=localStorage.getItem(this.key); if(previous) localStorage.setItem(this.key+':backup',previous);
+      localStorage.setItem(this.key, serialized);
       if(window.indexedDB){
         const req=indexedDB.open('carpincho',1);
         req.onupgradeneeded=e=>{ const db=e.target.result; if(!db.objectStoreNames.contains('saves')) db.createObjectStore('saves') };
@@ -12,7 +15,10 @@ export class SaveManager{
     }catch{ return false }
   }
   load(){
-    try{ const raw=localStorage.getItem(this.key); if(!raw) return null; return JSON.parse(raw).data }catch{ return null }
+    try{
+      const raw=localStorage.getItem(this.key) || localStorage.getItem(this.key+':backup');
+      if(!raw) return null; const parsed=JSON.parse(raw); return parsed?.data||null;
+    }catch{ return null }
   }
   has(){ return !!localStorage.getItem(this.key) }
 }

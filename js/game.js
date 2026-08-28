@@ -387,7 +387,8 @@ export class Game{
           else if(r.type==='scrap') item='scrap';
           else if(r.type==='herbs') item='herbs';
           else if(r.type==='tree') item='wood';
-          try{ inventory.add(item, r.type==='tree'?2: r.type==='iron_ore'?2:1); showNotif('+1 '+item); }catch{ showNotif('Inventário cheio'); }
+          const amount=r.type==='tree'?2: r.type==='iron_ore'?2:1;
+          try{ inventory.add(item, amount); this.advanceObjective('collect',item,amount); showNotif(`+${amount} ${item}`); }catch{ showNotif('Inventário cheio'); }
           // respawn 18s
           setTimeout(()=>{ r.hp=r.maxHp; r.depleted=false; if(r.mesh){ r.mesh.visible=true; r.mesh.scale.set(1,1,1);} },18000);
           // check fuel quest
@@ -396,6 +397,13 @@ export class Game{
       }
     }
     showNotif('Nada para interagir');
+  }
+  advanceObjective(type,target,amount=1){
+    const q=this.quests.active(); if(!q) return;
+    const o=q.objectives.find(x=>!x.done && x.type===type && (x.target===target || x.target==='any'));
+    if(!o) return;
+    o.progress=(o.progress||0)+amount; if(o.progress>=o.amount) o.done=true;
+    this.quests.checkComplete(q);
   }
   showTransition(title, subtitle, hint, onDone){
     if(this.transitioning) return;
@@ -508,7 +516,7 @@ export class Game{
     const q=this.quests.active();
     if(!q){ el.textContent='Nenhum objetivo ativo'; return; }
     const next=q.objectives.find(o=>!o.done);
-    el.innerHTML=`<b>${q.name}</b><br>${next?`▸ ${next.description}`:'✓ Objetivos concluídos'}`;
+    el.innerHTML=`<b>${q.name}</b><br>${next?`▸ ${next.description}${next.amount>1?` (${next.progress||0}/${next.amount})`:''}`:'✓ Objetivos concluídos'}`;
   }
   updateQuestHUD(){
     const q=this.quests.active();
