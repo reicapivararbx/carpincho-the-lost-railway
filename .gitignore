@@ -2,3 +2,22 @@
 *.import
 .godot/
 export/
+# Node.js
+node_modules/
+dist/
+build/
+*.log
+npm-debug.log*
+.env
+.env.local
+.env.*.local
+# Universal
+.DS_Store
+Thumbs.db
+*.tmp
+*.swp
+.vscode/
+.idea/
+# Vite
+.vite/
+coverage/

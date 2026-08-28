@@ -1,0 +1,4 @@
+/* map.css — fogOfWar per spec §21 */
+#map-panel{right:10px;top:60px;width:340px}
+#map-canvas{border:1px solid rgba(212,168,67,0.2);border-radius:6px;background:#0a1a05}
+#map-content{font-size:12px;line-height:1.6;opacity:0.8}

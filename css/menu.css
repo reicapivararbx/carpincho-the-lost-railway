@@ -1,0 +1,9 @@
+#menu{flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 30%, #1e3a15 0%, #0a1a05 70%);position:relative;overflow:hidden}
+.menu-bg{position:absolute;inset:0;opacity:0.15;background:repeating-linear-gradient(90deg, transparent 0 40px, rgba(212,168,67,0.1) 40px 42px)}
+.menu-content{position:relative;z-index:1;text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px}
+.logo{font-size:64px;letter-spacing:8px;color:var(--gold);text-shadow:0 4px 24px rgba(0,0,0,0.6)}
+.subtitle{font-size:18px;letter-spacing:6px;opacity:0.8}
+.tagline{font-style:italic;opacity:0.6;font-size:14px;margin-bottom:12px}
+.menu-nav{display:flex;flex-direction:column;gap:8px;min-width:240px}
+.menu-footer{margin-top:24px;font-size:11px;opacity:0.4}
+#char-creation{align-items:center;justify-content:center;background:rgba(0,0,0,0.7)}

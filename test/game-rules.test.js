@@ -1,0 +1,38 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { inventory } from '../js/inventory/inventory.js';
+import { canCraft, craft } from '../js/crafting/crafting.js';
+import { Furnace } from '../js/crafting/furnace.js';
+
+function resetInventory() {
+  inventory.fromJSON({ items: [], maxWeight: 100 });
+}
+
+test('crafting requires its declared station and consumes materials atomically', () => {
+  resetInventory();
+  inventory.add('wood', 8);
+  assert.equal(canCraft('crafting_table', 'hand', 1).ok, true);
+  assert.equal(craft('crafting_table', 'hand', 1).ok, true);
+  assert.equal(inventory.count('wood'), 0);
+  assert.equal(inventory.count('crafting_table'), 1);
+
+  inventory.add('wood', 3);
+  inventory.add('stone', 2);
+  assert.equal(canCraft('axe_wood', 'hand', 1).ok, false);
+  assert.equal(canCraft('axe_wood', 'crafting_table', 1).ok, true);
+  assert.equal(craft('axe_wood', 'crafting_table', 1).ok, true);
+  assert.equal(inventory.count('axe_wood'), 1);
+  assert.equal(inventory.count('wood'), 0);
+  assert.equal(inventory.count('stone'), 0);
+});
+
+test('furnace only completes a valid ore and fuel pair once', () => {
+  let output = null;
+  const furnace = new Furnace((item) => { output = item; });
+  furnace.setInput('iron_ore');
+  furnace.setFuel('coal');
+  furnace.tick(4.1);
+  assert.equal(output, 'iron_ingot');
+  assert.equal(furnace.canSmelt(), false);
+  assert.equal(furnace.output, 'iron_ingot');
+});

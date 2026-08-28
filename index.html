@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CARPINCHO: The Lost Railway</title>
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/menu.css">
+<link rel="stylesheet" href="/css/hud.css">
+<link rel="stylesheet" href="/css/game.css">
+<link rel="stylesheet" href="/css/inventory.css">
+<link rel="stylesheet" href="/css/crafting.css">
+<link rel="stylesheet" href="/css/map.css">
+<link rel="stylesheet" href="/css/dialogue.css">
+<link rel="stylesheet" href="/css/quests.css">
+</head>
+<body>
+<div id="app">
+  <!-- Loading -->
+  <div id="loading">Carregando CARPINCHO...</div>
+
+  <!-- MENU -->
+  <div id="menu" class="screen active">
+    <div class="menu-bg"></div>
+    <div class="menu-content">
+      <h1 class="logo">CARPINCHO</h1>
+      <p class="subtitle">THE LOST RAILWAY</p>
+      <p class="tagline">“The railway is lost. The journey is yours.”</p>
+      <nav class="menu-nav">
+        <button id="btn-jogar" class="btn primary">JOGAR</button>
+        <button id="btn-multiplayer" class="btn">MULTIPLAYER</button>
+        <button id="btn-continuar" class="btn" disabled>CONTINUAR</button>
+        <button id="btn-config" class="btn">CONFIGURAÇÕES</button>
+        <button id="btn-creditos" class="btn">CRÉDITOS</button>
+        <button id="btn-sair" class="btn">SAIR</button>
+      </nav>
+      <div class="menu-footer">v0.1.0 • HTML5 + Three.js • Pressione F1 para debug</div>
+    </div>
+  </div>
+
+  <!-- CHARACTER CREATION -->
+  <div id="char-creation" class="screen">
+    <div class="panel">
+      <h2>Criar Capivara</h2>
+      <label>Nome <input id="capy-name" value="Carpincho" maxlength="20"></label>
+      <label>Cor do pelo
+        <select id="capy-fur">
+          <option value="#c49a6c">Bege (padrão)</option>
+          <option value="#8B5A2B">Marrom</option>
+          <option value="#d9c9a5">Creme</option>
+          <option value="#5a3e1b">Chocolate</option>
+        </select>
+      </label>
+      <label>Chapéu
+        <select id="capy-hat">
+          <option value="none">Nenhum</option>
+          <option value="cap">Boné</option>
+          <option value="helmet">Capacete</option>
+        </select>
+      </label>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button id="btn-char-confirm" class="btn primary">CONFIRMAR E JOGAR</button>
+        <button id="btn-char-back" class="btn">VOLTAR</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GAME -->
+  <div id="game" class="screen">
+    <canvas id="game-canvas"></canvas>
+    <!-- HUD -->
+    <div id="hud">
+      <div id="hud-top">
+        <div class="hud-group">
+          <span class="hud-item">❤️ <span id="hud-hp">100</span>/100</span>
+          <div class="bar"><i id="bar-hp" style="width:100%"></i></div>
+        </div>
+        <div class="hud-group">
+          <span class="hud-item">⚡ <span id="hud-stamina">100</span></span>
+          <div class="bar stamina"><i id="bar-stamina" style="width:100%"></i></div>
+        </div>
+        <div class="hud-group">
+          <span class="hud-item">⭐ Lv <span id="hud-lv">1</span> <small id="hud-xp">0/100 XP</small></span>
+          <span class="hud-item">🪙 <span id="hud-coins">100</span></span>
+          <span class="hud-item">⛽ <span id="hud-fuel">80</span>%</span>
+          <span class="hud-item">🔧 <span id="hud-integ">100</span>%</span>
+        </div>
+        <div class="hud-group">
+          <span class="hud-item" id="hud-weapon">🔫 6/36</span>
+          <span class="hud-item" id="hud-region">🗺️ Planície</span>
+        </div>
+      </div>
+      <div id="hud-center">
+        <div id="crosshair">+</div>
+        <div id="prompt"></div>
+        <div id="boss-bar" style="display:none">
+          <div id="boss-name">GUARDIÃO DA FLORESTA</div>
+          <div class="bar boss"><i id="bar-boss" style="width:100%"></i></div>
+          <div id="boss-hp">100%</div>
+        </div>
+      </div>
+      <div id="hud-bottom">
+        <div id="notifs"></div>
+        <div class="controls-hint">WASD mover • SHIFT correr • E interagir • B posicionar estrutura • Q acelerar trem • R reparar/recarregar • 1 espada 2 pistola • ESC menu</div>
+      </div>
+    </div>
+
+    <!-- Overlays -->
+    <div id="inventory-panel" class="overlay">
+      <h3>🎒 INVENTÁRIO <span id="inv-weight">0/100 KG</span> <button id="inv-close" class="btn small">X</button></h3>
+      <div id="inv-grid" class="inv-grid"></div>
+      <div id="crafting-quick">
+        <h4>Crafting Rápido</h4>
+        <div id="quick-recipes"></div>
+      </div>
+    </div>
+
+    <div id="crafting-panel" class="overlay">
+      <h3 id="crafting-title">MESA DE CRAFTING <button id="craft-close" class="btn small">X</button></h3>
+      <div class="crafting-grid">
+        <div id="craft-slots" class="craft-slots">
+          <div class="slot" data-idx="0"></div><div class="slot" data-idx="1"></div><div class="slot" data-idx="2"></div>
+          <div class="slot" data-idx="3"></div><div class="slot" data-idx="4"></div><div class="slot" data-idx="5"></div>
+          <div class="slot" data-idx="6"></div><div class="slot" data-idx="7"></div><div class="slot" data-idx="8"></div>
+        </div>
+        <div class="craft-arrow">→</div>
+        <div id="craft-output" class="slot output"></div>
+      </div>
+      <div id="craft-ingredients"></div>
+      <button id="btn-craft" class="btn primary" disabled>CRAFTAR</button>
+      <div id="recipe-list"></div>
+    </div>
+
+    <div id="furnace-panel" class="overlay">
+      <h3>FORNALHA <button id="furnace-close" class="btn small">X</button></h3>
+      <div>Entrada: <span id="furnace-input" class="slot small"></span> Combustível: <span id="furnace-fuel" class="slot small"></span></div>
+      <div>Progresso:<div class="bar"><i id="furnace-bar" style="width:0%"></i></div></div>
+      <div>Saída: <span id="furnace-output" class="slot small"></span></div>
+      <button id="btn-smelt" class="btn">FUNDIR</button>
+    </div>
+
+    <div id="pause-menu" class="overlay centered">
+      <h2>PAUSA</h2>
+      <button id="btn-resume" class="btn primary">CONTINUAR</button>
+      <button id="btn-inventory" class="btn">INVENTÁRIO (I)</button>
+      <button id="btn-map" class="btn">MAPA (M)</button>
+      <button id="btn-quests" class="btn">MISSÕES (J)</button>
+      <button id="btn-save" class="btn">SALVAR</button>
+      <button id="btn-quit-menu" class="btn">VOLTAR AO MENU</button>
+    </div>
+
+    <div id="map-panel" class="overlay">
+      <h3>🗺️ MAPA <button id="map-close" class="btn small">X</button></h3>
+      <div id="map-content">📍 Planície — Estação Inicial<br>🌲 Floresta — norte (repare trilho 14,10)<br>🚉 Estação Zero — bloqueada (derrote guardiões)</div>
+      <canvas id="map-canvas" width="300" height="200" style="border:1px solid #555;margin-top:8px"></canvas>
+    </div>
+
+    <div id="quests-panel" class="overlay">
+      <h3>📜 MISSÕES <button id="quests-close" class="btn small">X</button></h3>
+      <div id="quest-list"></div>
+    </div>
+
+    <div id="death-screen" class="overlay centered" style="display:none">
+      <h2>VOCÊ FOI DERROTADO</h2>
+      <button id="btn-respawn" class="btn primary">TENTAR NOVAMENTE</button>
+      <button id="btn-checkpoint" class="btn">CHECKPOINT</button>
+      <button id="btn-death-quit" class="btn">SAIR</button>
+    </div>
+
+    <div id="cutscene" class="overlay" style="display:none">
+      <div id="cutscene-text"></div>
+      <button id="btn-skip" class="btn small">PULAR</button>
+    </div>
+
+    <div id="transition" class="transition">
+      <div class="transition-content">
+        <div class="transition-icon">🚂</div>
+        <h2 id="transition-title">Carregando próximo terreno...</h2>
+        <p id="transition-subtitle">Floresta Antiga • 18km à frente</p>
+        <div class="bar transition-bar"><i id="transition-bar" style="width:0%"></i></div>
+        <p id="transition-hint">Dica: use picareta de ferro para minérios raros da floresta</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONFIG -->
+  <div id="config" class="screen">
+    <div class="panel">
+      <h2>Configurações</h2>
+      <label>Qualidade <select id="cfg-quality"><option>Alta</option><option>Média</option><option>Baixa</option></select></label>
+      <label>Volume Geral <input type="range" id="cfg-volume" min="0" max="100" value="80"></label>
+      <label>Tamanho UI <input type="range" id="cfg-ui" min="80" max="130" value="100"></label>
+      <div style="margin-top:12px"><button id="btn-config-back" class="btn primary">VOLTAR</button></div>
+    </div>
+  </div>
+
+  <div id="multiplayer" class="screen">
+    <div class="panel">
+      <h2>MULTIPLAYER COOPERATIVO</h2>
+      <label>Nome da sala <input id="mp-name" value="Expedição Carpincho" maxlength="24"></label>
+      <label>Jogadores máximos <select id="mp-max"><option value="2">2</option><option value="3">3</option><option value="4" selected>4</option></select></label>
+      <button id="btn-mp-create" class="btn primary">CRIAR SALA</button>
+      <label>Código da sala <input id="mp-code" maxlength="4" placeholder="ABCD"></label>
+      <button id="btn-mp-join" class="btn">ENTRAR COM CÓDIGO</button>
+      <p id="mp-status" aria-live="polite"></p>
+      <button id="btn-mp-back" class="btn small">VOLTAR</button>
+    </div>
+  </div>
+</div>
+<script type="module" src="/js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+/* game specific */
+#game.active{display:block}
+#config.active{display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.8)}
+.transition{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 30%, #1a2e12 0%, #000 75%);display:none;align-items:center;justify-content:center;z-index:50;pointer-events:auto}
+.transition.active{display:flex;animation:fadeIn 0.4s ease}
+.transition-content{text-align:center;max-width:420px;padding:20px}
+.transition-icon{font-size:48px;animation:chug 0.8s ease-in-out infinite}
+.transition-content h2{color:var(--gold);letter-spacing:2px;margin:12px 0 6px;font-size:18px}
+.transition-content p{opacity:0.7;font-size:12px;margin:4px 0}
+.transition-bar{width:260px;height:10px;margin:14px auto;background:rgba(255,255,255,0.1);border-radius:5px;overflow:hidden}
+.transition-bar i{display:block;height:100%;background:linear-gradient(90deg, var(--gold), #fff);width:0%;transition:width 0.2s}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes chug{0%,100%{transform:translateX(0)}50%{transform:translateX(6px)}}

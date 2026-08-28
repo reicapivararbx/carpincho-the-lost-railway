@@ -1,0 +1,10 @@
+/* crafting.css — mesa/fornalha per spec §33 §38 */
+.crafting-grid{display:flex;align-items:center;gap:12px}
+.craft-slots{display:grid;grid-template-columns:repeat(3,56px);gap:4px}
+.craft-arrow{font-size:20px;color:var(--gold)}
+.slot.output{border-color:var(--gold);background:rgba(212,168,67,0.15)}
+#recipe-list{max-height:120px;overflow:auto}
+.recipe{padding:4px 6px;border:1px solid transparent;border-radius:6px;cursor:pointer;font-size:12px}
+.recipe:hover{background:rgba(212,168,67,0.1);border-color:var(--gold)}
+#crafting-panel{left:50%;top:50%;transform:translate(-50%,-50%);width:520px}
+#furnace-panel{left:50%;top:50%;transform:translate(-50%,-50%);width:360px}

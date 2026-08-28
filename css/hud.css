@@ -1,0 +1,42 @@
+#game{position:relative}
+#game-canvas{width:100%;height:100%;display:block}
+#hud{position:absolute;inset:0;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:10px}
+#hud-top{display:flex;gap:12px;flex-wrap:wrap;background:rgba(0,0,0,0.6);padding:6px 10px;border-radius:8px;pointer-events:auto;font-size:12px}
+.hud-group{display:flex;align-items:center;gap:6px}
+.hud-item{background:rgba(253,246,227,0.08);padding:2px 6px;border-radius:4px}
+.bar{width:80px;height:8px;background:rgba(0,0,0,0.4);border-radius:4px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--gold);transition:width 0.2s}
+.bar.stamina i{background:#2ecc71}
+.bar.boss i{background:#e74c3c}
+#hud-center{display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none}
+#crosshair{font-size:18px;opacity:0.7}
+#prompt{background:rgba(0,0,0,0.7);padding:4px 10px;border-radius:12px;font-size:12px}
+#boss-bar{background:rgba(0,0,0,0.8);padding:6px 12px;border-radius:8px;text-align:center;min-width:300px;border:1px solid #e74c3c}
+#boss-name{font-weight:bold;letter-spacing:2px;font-size:12px}
+#hud-bottom{pointer-events:auto}
+#notifs{position:absolute;right:10px;bottom:40px;display:flex;flex-direction:column;gap:4px}
+.notif{background:rgba(0,0,0,0.8);border:1px solid var(--gold);padding:4px 10px;border-radius:12px;font-size:12px;animation:fade 2.5s forwards}
+@keyframes fade{0%{opacity:1}80%{opacity:1}100%{opacity:0;transform:translateY(-10px)}}
+.controls-hint{font-size:10px;opacity:0.5;text-align:center}
+.overlay{position:absolute;background:rgba(20,30,15,0.96);border:1px solid rgba(212,168,67,0.2);border-radius:12px;padding:12px;display:none;pointer-events:auto;max-height:90vh;overflow:auto}
+.overlay.active{display:block}
+.overlay.centered{left:50%;top:50%;transform:translate(-50%,-50%);text-align:center}
+#inventory-panel{left:10px;top:60px;width:360px}
+#crafting-panel{left:50%;top:50%;transform:translate(-50%,-50%);width:520px}
+#furnace-panel{left:50%;top:50%;transform:translate(-50%,-50%);width:360px}
+#pause-menu{min-width:260px}
+#map-panel{right:10px;top:60px;width:340px}
+#quests-panel{left:10px;bottom:10px;width:360px;max-height:50vh}
+#death-screen{background:rgba(40,0,0,0.9);border:1px solid #e74c3c}
+#cutscene{inset:auto;bottom:20px;left:50%;transform:translateX(-50%);width:80%;max-width:600px;background:rgba(0,0,0,0.85)}
+.inv-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin:8px 0}
+.inv-grid .slot,.slot{background:rgba(0,0,0,0.3);border:1px solid rgba(253,246,227,0.1);border-radius:6px;height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:18px;position:relative}
+.slot small{font-size:9px;opacity:0.6}
+.slot.output{border-color:var(--gold)}
+.crafting-grid{display:flex;align-items:center;gap:12px;margin:12px 0}
+.craft-slots{display:grid;grid-template-columns:repeat(3,56px);gap:4px}
+.craft-arrow{font-size:20px}
+#recipe-list{max-height:120px;overflow:auto;font-size:12px;margin-top:8px}
+.recipe{padding:4px 6px;border:1px solid transparent;border-radius:6px;cursor:pointer}
+.recipe:hover{background:rgba(212,168,67,0.1);border-color:var(--gold)}
+#quest-list .quest{background:rgba(212,168,67,0.1);border:1px solid rgba(212,168,67,0.2);border-radius:8px;padding:8px;margin:6px 0;font-size:12px}

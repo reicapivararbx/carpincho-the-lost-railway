@@ -1,0 +1,1 @@
+export class Pistol{ constructor(){ this.mag=6; this.reserve=36 } shoot(){ if(this.mag<=0) return false; this.mag--; return true } reload(){ const need=6-this.mag; const take=Math.min(need,this.reserve); this.mag+=take; this.reserve-=take } }

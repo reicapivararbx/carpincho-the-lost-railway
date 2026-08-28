@@ -1,0 +1,4 @@
+/* dialogue.css — per spec §82 */
+#cutscene{bottom:20px;left:50%;transform:translateX(-50%);width:80%;max-width:600px;background:rgba(0,0,0,0.88);border:1px solid var(--gold);border-radius:12px;padding:14px}
+#cutscene-text{font-size:14px;line-height:1.5;min-height:40px}
+#btn-skip{position:absolute;top:8px;right:8px}
