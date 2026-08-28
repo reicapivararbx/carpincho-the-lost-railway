@@ -113,6 +113,8 @@ function draw(){
     ctx.fillStyle='#fff';ctx.font='10px sans-serif';ctx.fillText('QUEBRADO',brokenRail.x*TILE+2,ry-14)
     ctx.fillText('R p/ reparar',brokenRail.x*TILE+2,ry+24)
   }
+  // forest area (east of broken rail) - appears after repair
+  if(brokenRail.repaired){ctx.fillStyle='rgba(34,139,34,0.25)';ctx.fillRect((brokenRail.x+2)*TILE,0,W-(brokenRail.x+2)*TILE,H);ctx.fillStyle='rgba(34,139,34,0.5)';ctx.font='bold 12px sans-serif';ctx.fillText('🌲 FLORESTA DESBLOQUEADA 🌲',(brokenRail.x+2)*TILE+20,30)}
   // station
   ctx.fillStyle='#8B4513';ctx.fillRect(stationX*TILE-8, (trainY-2)*TILE, TILE*3, TILE*3)
   ctx.fillStyle='#d4a843';ctx.font='11px sans-serif';ctx.fillText('ESTAÇÃO',stationX*TILE-4,(trainY-2)*TILE-6)
@@ -124,7 +126,7 @@ function draw(){
     else if(r.t==='rock'){ctx.fillStyle='#6a6a6a';ctx.beginPath();ctx.arc(cx,cy,10,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.font='10px sans-serif';ctx.fillText('🪨',cx-7,cy+4)}
     else if(r.t==='scrap'){ctx.fillStyle='#8a7a5a';ctx.fillRect(cx-10,cy-8,20,14);ctx.fillStyle='#fff';ctx.font='10px sans-serif';ctx.fillText('🔩',cx-7,cy+4)}
     else if(r.t==='coal'){ctx.fillStyle='#222';ctx.beginPath();ctx.arc(cx,cy,9,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.font='10px sans-serif';ctx.fillText('⬢',cx-5,cy+4)}
-    else if(r.t==='iron'){ctx.fillStyle='#a0522d';ctx.beginPath();ctx.arc(cx,cy,10,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.font='10px sans-serif';ctx.fillText('⛏',cx-6,cy+4)}
+    else if(r.t==='iron'){ctx.fillStyle='#ff8c00';ctx.strokeStyle='#fff';ctx.lineWidth=1;ctx.beginPath();ctx.arc(cx,cy,11,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#fff';ctx.font='bold 11px sans-serif';ctx.fillText('FERRO',cx-14,cy-14);ctx.font='12px sans-serif';ctx.fillText('⛏',cx-6,cy+4)}
   }
   // train
   const tx=trainX*TILE, ty=trainY*TILE
@@ -163,7 +165,7 @@ function draw(){
 }
 function updateInv(){
   const grid=document.getElementById('inv');grid.innerHTML=''
-  const icons={wood:'🪵',stone:'🪨',iron:'🔩',scrap:'🔧',coal:'⬢',herbs:'🌿'}
+  const icons={wood:'🪵',stone:'🪨',iron:'⛏',scrap:'🔧',coal:'⬢',herbs:'🌿'}
   let w=0
   for(const k of ['wood','stone','iron','scrap','coal','herbs']){
     const n=inv[k]||0; const weight={wood:1,stone:2,iron:2,scrap:1.5,coal:1.5,herbs:0.5}[k]*n; w+=weight
@@ -212,7 +214,7 @@ function tryCollect(){
   }
   // repair
   if(dist(px,py,brokenRail.x,brokenRail.y)<1.8 && !brokenRail.repaired){
-    if(inv.scrap>=3 && inv.iron>=2){inv.scrap-=3;inv.iron-=2;brokenRail.repaired=true;msg('Trilho reparado! Floresta liberada');updateInv()}
+    if(inv.scrap>=3 && inv.iron>=2){inv.scrap-=3;inv.iron-=2;brokenRail.repaired=true;msg('✅ Trilho reparado! FLORESTA LIBERADA — vá de trem para o LESTE →',4000);document.querySelector('#right h2:nth-of-type(3)').nextElementSibling.innerHTML='📍 Planície ✓<br>🌲 <b style=color:#2ecc71>Floresta — DESBLOQUEADA! Vá de trem →</b><br>🚉 Estação Zero — bloqueada';updateInv(); setTimeout(()=>{resources.push({x:25,y:5,t:'tree',hp:2},{x:26,y:8,t:'coal',hp:1},{x:24,y:4,t:'iron',hp:2});msg('Novos recursos surgiram na floresta!')},800)}
     else msg('Precisa 3 sucata + 2 ferro')
   }
 }
@@ -236,7 +238,7 @@ addEventListener('keydown',e=>{
   if(e.key==='e'||e.key==='E') tryCollect()
   if((e.key==='r'||e.key==='R') && !inTrain){
     if(dist(px,py,brokenRail.x,brokenRail.y)<1.8 && !brokenRail.repaired){
-      if(inv.scrap>=3 && inv.iron>=2){inv.scrap-=3;inv.iron-=2;brokenRail.repaired=true;msg('Trilho reparado!');updateInv()} else msg('Precisa 3 sucata + 2 ferro')
+      if(inv.scrap>=3 && inv.iron>=2){inv.scrap-=3;inv.iron-=2;brokenRail.repaired=true;msg('✅ Trilho reparado! FLORESTA LIBERADA — vá de trem →',4000);updateInv()} else msg('Precisa 3 sucata + 2 ferro (tem '+inv.scrap+' sucata, '+inv.iron+' ferro)')
     }
   }
   if(e.key==='i'||e.key==='I') msg('Inventário ao lado →')
