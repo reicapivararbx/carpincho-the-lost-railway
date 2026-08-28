@@ -222,6 +222,10 @@ export class Game{
     if(e.key.toLowerCase()==='r' && this.weapon==='pistol'){ this.pistol.reload(); showNotif(`Recarregado ${this.pistol.mag}/6`); }
     if(e.key.toLowerCase()==='h' && this.train.inTrain){ showNotif('🚂 BUZINA! Piiiii!') }
     if(e.key.toLowerCase()==='b'){ this.placeStation(); }
+    if(e.code==='Space' && selectedItem()==='bread' && !this.train.inTrain){
+      if(inventory.remove('bread',1)){ this.player.health.heal(20); showNotif('🍞 +20 VIDA'); }
+      return;
+    }
     if(e.code==='Space' && this.grounded && !this.train.inTrain){ this.jumpVelocity=6.5; this.grounded=false; }
   }
   equipWeapon(weapon){
