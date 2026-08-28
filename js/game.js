@@ -101,7 +101,10 @@ export class Game{
     const swordMesh=new THREE.Mesh(new THREE.BoxGeometry(.08,.08,.95),new THREE.MeshStandardMaterial({color:0xd8e5ef,metalness:.8,roughness:.25})); swordMesh.position.z=-.42; swordMesh.rotation.x=-.18; rightHand.add(swordMesh);
     const swordGrip=new THREE.Mesh(new THREE.CylinderGeometry(.07,.07,.22,8),new THREE.MeshStandardMaterial({color:0x5a3e1b})); swordGrip.position.z=.1; rightHand.add(swordGrip);
     const pistolMesh=new THREE.Mesh(new THREE.BoxGeometry(.14,.16,.42),new THREE.MeshStandardMaterial({color:0x22252a,metalness:.65,roughness:.35})); pistolMesh.position.z=-.2; pistolMesh.visible=false; rightHand.add(pistolMesh);
-    this.weaponMeshes={sword:swordMesh,pistol:pistolMesh};
+    const toolMat=new THREE.MeshStandardMaterial({color:0x8b5a2b,roughness:.8});
+    const pickMesh=new THREE.Mesh(new THREE.BoxGeometry(.08,.08,.72),toolMat); pickMesh.position.z=-.32; pickMesh.rotation.x=-.35; pickMesh.visible=false; rightHand.add(pickMesh);
+    const axeMesh=new THREE.Mesh(new THREE.BoxGeometry(.12,.08,.52),toolMat); axeMesh.position.z=-.24; axeMesh.rotation.x=-.25; axeMesh.visible=false; rightHand.add(axeMesh);
+    this.weaponMeshes={sword:swordMesh,pistol:pistolMesh,pick:pickMesh,axe:axeMesh};
     capyGroup.position.set(0,0.9,0); this.scene.add(capyGroup); this.playerMesh=capyGroup;
     // train mesh
     const trainGroup=new THREE.Group();
@@ -236,8 +239,14 @@ export class Game{
   equipWeapon(weapon){
     if(weapon!=='sword' && weapon!=='pistol') return;
     this.weapon=weapon;
-    if(this.weaponMeshes){ this.weaponMeshes.sword.visible=weapon==='sword'; this.weaponMeshes.pistol.visible=weapon==='pistol'; }
+    if(this.weaponMeshes){ Object.values(this.weaponMeshes).forEach(m=>m.visible=false); this.weaponMeshes.sword.visible=weapon==='sword'; this.weaponMeshes.pistol.visible=weapon==='pistol'; }
     showNotif(weapon==='sword'?'Espada equipada':'Pistola equipada');
+  }
+  equipTool(id){
+    if(!this.weaponMeshes || id==='sword_iron' || id==='pistol_basic') return;
+    Object.values(this.weaponMeshes).forEach(m=>m.visible=false);
+    if(id.startsWith('pick')) this.weaponMeshes.pick.visible=true;
+    else if(id.startsWith('axe')) this.weaponMeshes.axe.visible=true;
   }
   createStation(type, x, z, starter=false){
     const isTable=type==='crafting_table';
@@ -603,7 +612,13 @@ export class Game{
       // clamp
       this.player.pos.x=Math.max(-45,Math.min(45,this.player.pos.x));
       this.player.pos.z=Math.max(-45,Math.min(45,this.player.pos.z));
-      if(this.playerMesh){ this.playerMesh.position.set(this.player.pos.x,this.player.pos.y,this.player.pos.z); if(mv.lengthSq()>0.001) this.playerMesh.rotation.y=Math.atan2(mv.x,mv.z); }
+      if(this.playerMesh){
+        this.playerMesh.position.set(this.player.pos.x,this.player.pos.y,this.player.pos.z);
+        if(mv.lengthSq()>0.001){ this.playerMesh.rotation.y=Math.atan2(mv.x,mv.z); this.playerMesh.userData.walkTime=(this.playerMesh.userData.walkTime||0)+dt*(sprint?12:8); }
+        else this.playerMesh.userData.walkTime=(this.playerMesh.userData.walkTime||0)+dt*2;
+        const moving=mv.lengthSq()>0.001; const stride=moving?Math.sin(this.playerMesh.userData.walkTime)*.035:Math.sin(this.playerMesh.userData.walkTime)*.012;
+        this.playerMesh.rotation.z=stride;
+      }
       if(this.player.health.dead){
         this.state='DEAD';
         document.getElementById('death-screen').style.display='flex';

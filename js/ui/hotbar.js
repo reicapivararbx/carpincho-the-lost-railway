@@ -21,6 +21,7 @@ export function selectHotbar(index){
   const id=hotbar.slots[index];
   if(id==='sword_iron') window.carpinchoGame?.equipWeapon('sword');
   if(id==='pistol_basic') window.carpinchoGame?.equipWeapon('pistol');
+  if(id && !['sword_iron','pistol_basic'].includes(id)) window.carpinchoGame?.equipTool(id);
 }
 export function selectedItem(){ return hotbar.slots[hotbar.selected]; }
 export function hotbarFromJSON(slots){ if(Array.isArray(slots)) hotbar.slots=DEFAULT_SLOTS.map((fallback,i)=>slots[i]===null?null:(slots[i]||fallback)); renderHotbar(); }
