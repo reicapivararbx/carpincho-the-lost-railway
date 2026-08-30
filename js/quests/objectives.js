@@ -1,1 +1,1 @@
-export function updateObjective(q,id,amt=1){ const o=q.objectives.find(x=>x.id===id); if(o) o.done=true }
+export function updateObjective(quest,id,amount=1){const objective=quest.objectives.find(item=>item.id===id);if(!objective)return false;objective.progress=Math.min(objective.amount,(objective.progress||0)+amount);objective.done=objective.progress>=objective.amount;return objective.done}

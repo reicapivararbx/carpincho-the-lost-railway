@@ -1,1 +1,6 @@
-export class Shop{ constructor(){ this.list=[{item:'wood',price:5},{item:'iron_ingot',price:20}] } price(item,region){ return item==='iron_ingot'&&region==='desert'?28:20 } }
+export class Shop{
+  constructor(list=[{item:'bread',price:8,stock:12},{item:'wood',price:5,stock:20},{item:'iron_ingot',price:20,stock:8}]){this.list=list.map(item=>({...item}))}
+  price(item,region,reputation=0){const listing=this.list.find(entry=>entry.item===item),base=listing?.price??(item==='iron_ingot'?20:10),regional=item==='iron_ingot'&&region==='desert'?1.4:1;return Math.ceil(base*regional*(1-Math.min(.2,reputation*.05)))}
+  buy(item,amount,player,inventory,{region='plain',reputation=0}={}){const listing=this.list.find(entry=>entry.item===item);if(!listing||listing.stock<amount)return {ok:false,reason:'sem estoque'};const cost=this.price(item,region,reputation)*amount;if(player.coins<cost)return {ok:false,reason:'moedas insuficientes'};if(!inventory.canAdd(item,amount))return {ok:false,reason:'inventário cheio'};player.coins-=cost;listing.stock-=amount;inventory.add(item,amount);return {ok:true,cost}}
+  sell(item,amount,player,inventory,{region='plain'}={}){if(!inventory.has(item,amount))return {ok:false,reason:'item insuficiente'};const value=Math.max(1,Math.floor(this.price(item,region)*.55))*amount;inventory.remove(item,amount);player.coins+=value;const listing=this.list.find(entry=>entry.item===item);if(listing)listing.stock+=amount;return {ok:true,value}}
+}

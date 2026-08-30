@@ -1,1 +1,3 @@
-export function harvest(node, toolTier){ if(toolTier<node.tier) return {ok:false,reason:'precisa ferramenta superior'}; return {ok:true} }
+export function harvest(node, toolTier, power=1, random=Math.random){
+  return node.hit({tool:'axe',tier:toolTier,power,random});
+}

@@ -1,9 +1,19 @@
 export class CutsceneManager{
-  constructor(){ this.active=false }
+  constructor(){ this.active=false; this.timer=null; this.onDone=null }
   play(id,onDone){
+    this.finish('replaced');
     this.active=true; const el=document.getElementById('cutscene');
     if(el){ el.style.display='block'; const t=document.getElementById('cutscene-text'); if(t) t.textContent='▶ '+id; }
-    setTimeout(()=>{ this.active=false; if(el) el.style.display='none'; onDone&&onDone(); },2600);
+    this.onDone=onDone;
+    this.timer=setTimeout(()=>this.finish('complete'),2600);
   }
-  skip(){ this.active=false; const el=document.getElementById('cutscene'); if(el) el.style.display='none'; }
+  finish(reason){
+    if(!this.active) return;
+    this.active=false;
+    if(this.timer) clearTimeout(this.timer);
+    this.timer=null;
+    const el=document.getElementById('cutscene'); if(el) el.style.display='none';
+    const done=this.onDone; this.onDone=null; done&&done(reason);
+  }
+  skip(){ this.finish('skipped'); }
 }

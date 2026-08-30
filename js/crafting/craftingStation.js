@@ -1,1 +1,1 @@
-export class CraftingStation{ constructor(type){ this.type=type } }
+export class CraftingStation{constructor(type,{id=`station-${type}`,level=1,position={x:0,z:0}}={}){this.id=id;this.type=type;this.level=level;this.position=position;this.queue=[]}enqueue(recipe){this.queue.push({recipe,progress:0});return this.queue.length}tick(dt){const job=this.queue[0];if(!job)return null;job.progress+=dt;if(job.progress>=(job.recipe.duration||1)){this.queue.shift();return job.recipe.output}return null}}

@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Player state browser smoke test</title>
+  <style>
+    body { margin: 0; background: #071707; color: #d8ac49; font: 20px monospace; }
+    #result { position: fixed; z-index: 2; inset: 24px auto auto 24px; padding: 16px; background: #102810; }
+    canvas { width: 100vw; height: 100vh; }
+    .overlay { display: none; }
+    .overlay.active { display: block; }
+  </style>
+</head>
+<body>
+  <div id="result">EXECUTANDO</div>
+  <canvas id="game-canvas"></canvas>
+  <button id="btn-continuar" hidden></button>
+  <div id="notifs"></div>
+  <div id="pause-menu" class="overlay"></div>
+  <div id="inventory-panel" class="overlay"></div>
+  <div id="crafting-panel" class="overlay"></div>
+  <div id="furnace-panel" class="overlay"></div>
+  <div id="map-panel" class="overlay"></div>
+  <div id="quests-panel" class="overlay"></div>
+  <div id="death-screen" class="overlay" style="display:none"></div>
+  <div id="cutscene" class="overlay" style="display:none"><div id="cutscene-text"></div></div>
+  <div id="transition"><i id="transition-bar"></i></div>
+  <div id="prompt"></div>
+  <div id="objective-tracker"></div>
+  <div id="furnace-bar"></div>
+
+  <script type="module">
+    import { Game } from '../js/game.js';
+    import { PLAYER_STATES } from '../js/player/playerStateMachine.js';
+
+    const result=document.getElementById('result');
+    const expect=(condition, message)=>{ if(!condition) throw new Error(message); };
+
+    try {
+      localStorage.removeItem('carpincho_save');
+      const game=new Game(document.getElementById('game-canvas'));
+      window.carpinchoGame=game;
+
+      expect(game.state===PLAYER_STATES.ON_FOOT, 'estado inicial');
+      expect(game.enterTrain(), 'entrada no trem');
+      expect(game.state===PLAYER_STATES.IN_TRAIN && game.train.inTrain, 'estado dentro do trem');
+      game.train.speed=2;
+      game.update(.016);
+      expect(game.state===PLAYER_STATES.DRIVING, 'estado dirigindo');
+      game.togglePause();
+      expect(game.state===PLAYER_STATES.MENU && game._paused, 'estado de menu');
+      game.closeMenu();
+      expect(game.state===PLAYER_STATES.DRIVING, 'retorno do menu');
+      expect(game.exitTrain() && game.state===PLAYER_STATES.ON_FOOT, 'saída do trem');
+      game.onShoot();
+      expect(game.state===PLAYER_STATES.COMBAT, 'estado de combate');
+      game.update(.5);
+      expect(game.state===PLAYER_STATES.ON_FOOT, 'fim do combate');
+      expect(game.playCutscene('Teste de estado'), 'início da cutscene');
+      expect(game.state===PLAYER_STATES.CUTSCENE, 'estado de cutscene');
+      game.skipCutscene();
+      expect(game.state===PLAYER_STATES.ON_FOOT, 'retorno da cutscene');
+      game.player.health.current=0;
+      game.update(.016);
+      expect(game.state===PLAYER_STATES.DEAD, 'estado morto');
+      expect(game.respawn({x:3,z:4}), 'respawn');
+      expect(game.state===PLAYER_STATES.ON_FOOT && game.player.pos.x===3, 'estado depois do respawn');
+
+      game.renderer.render(game.scene, game.camera);
+      result.textContent='PASS: 8 ESTADOS INTEGRADOS';
+      result.style.color='#72f59b';
+    } catch(error) {
+      result.textContent='FAIL: '+error.message;
+      result.style.color='#ff6b6b';
+      throw error;
+    }
+  </script>
+</body>
+</html>

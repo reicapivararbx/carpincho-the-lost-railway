@@ -1,0 +1,2 @@
+export function updateDistanceLOD(objects,position,{near=25,far=70}={}){for(const object of objects){const source=object.position||object,d=Math.hypot((source.x||0)-position.x,(source.z||0)-position.z);object.visible=d<=far;object.userData??={};object.userData.lod=d<=near?0:d<=far?1:2;if(object.material)object.material.wireframe=false}return objects}
+export function configureCulling(root){root?.traverse?.(object=>{if(object.isMesh){object.frustumCulled=true;object.matrixAutoUpdate=true}});return root}

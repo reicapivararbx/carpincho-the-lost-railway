@@ -1,1 +1,1 @@
-export class Networking{ send(t,p){} }
+export class Networking{constructor(socket=null){this.socket=socket;this.queue=[];this.sequence=0}attach(socket){this.socket=socket;while(this.queue.length)this.send(...this.queue.shift())}send(type,payload={}){if(!this.socket||this.socket.readyState!==1){this.queue.push([type,payload]);return false}this.socket.send(JSON.stringify({type,payload,seq:this.sequence++}));return true}}

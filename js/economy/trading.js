@@ -1,1 +1,1 @@
-export function trade(a,b){ return true }
+export function trade(from,to,{item,amount=1,coins=0}){if(!from.inventory.has(item,amount)||to.player.coins<coins||!to.inventory.canAdd(item,amount))return {ok:false};from.inventory.remove(item,amount);to.inventory.add(item,amount);to.player.coins-=coins;from.player.coins+=coins;return {ok:true}}

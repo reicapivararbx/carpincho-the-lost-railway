@@ -1,1 +1,1 @@
-export class Reputation{ constructor(){ this.map=new Map() } level(r){ return this.map.get(r)||0 } add(r,n){ this.map.set(r,(this.map.get(r)||0)+n) } }
+export class Reputation{constructor(){this.map=new Map()}level(region){return Math.max(0,Math.min(4,Math.floor((this.map.get(region)||0)/100)))}points(region){return this.map.get(region)||0}add(region,amount){this.map.set(region,Math.max(0,this.points(region)+(Number(amount)||0)));return this.level(region)}discount(region){return this.level(region)*.05}toJSON(){return [...this.map]}fromJSON(data){this.map=new Map(data||[])}}

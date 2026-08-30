@@ -1,1 +1,2 @@
-export class EngineeringTable{ constructor(){ this.type='engineering_table' } }
+import { CraftingStation } from './craftingStation.js';
+export class EngineeringTable extends CraftingStation{constructor(options={}){super('engineering_table',options);this.technologies=new Set()}research(id,requirements,inventory){for(const [item,amount]of Object.entries(requirements||{}))if(!inventory.has(item,amount))return false;Object.entries(requirements||{}).forEach(([item,amount])=>inventory.remove(item,amount));this.technologies.add(id);return true}}

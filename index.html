@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CARPINCHO: The Lost Railway</title>
-<link rel="icon" type="image/svg+xml" href="/railsgame/icon.svg">
+<link rel="icon" type="image/svg+xml" href="/icon.svg">
 <link rel="stylesheet" href="/css/style.css">
 <link rel="stylesheet" href="/css/menu.css">
 <link rel="stylesheet" href="/css/hud.css">
@@ -23,6 +23,7 @@
 
   <!-- MENU -->
   <div id="menu" class="screen active">
+    <canvas id="menu-canvas" aria-hidden="true"></canvas>
     <div class="menu-bg"></div>
     <div class="menu-content">
       <h1 class="logo">CARPINCHO</h1>
@@ -107,6 +108,10 @@
         <div id="hotbar" aria-label="Barra rápida de itens"></div>
         <div class="controls-hint">WASD mover • SHIFT correr • E interagir • B posicionar estrutura • Q acelerar trem • R reparar/recarregar • 1 espada 2 pistola • ESC menu</div>
       </div>
+      <div id="train-dashboard" aria-label="Painel da locomotiva">
+        <b id="train-destination">DESTINO: FLORESTA</b><span>VELO <i id="train-speed">0</i> km/h</span><span>DIST <i id="train-distance">0</i> km</span><span>COMB <i id="train-fuel">80</i>%</span><span>INTEG <i id="train-integrity">100</i>%</span>
+      </div>
+      <div id="chat"><div id="chat-log"></div><select id="chat-channel"><option value="group">Grupo</option><option value="proximity">Proximidade</option></select><input id="chat-input" maxlength="200" placeholder="Mensagem"><button id="chat-send" class="btn small">ENVIAR</button></div>
     </div>
 
     <!-- Overlays -->
@@ -149,6 +154,7 @@
       <button id="btn-inventory" class="btn">INVENTÁRIO (I)</button>
       <button id="btn-map" class="btn">MAPA (M)</button>
       <button id="btn-quests" class="btn">MISSÕES (J)</button>
+      <button id="btn-profile" class="btn">PERFIL E CODEX</button>
       <button id="btn-save" class="btn">SALVAR</button>
       <button id="btn-quit-menu" class="btn">VOLTAR AO MENU</button>
     </div>
@@ -163,6 +169,10 @@
       <h3>📜 MISSÕES <button id="quests-close" class="btn small">X</button></h3>
       <div id="quest-list"></div>
     </div>
+    <div id="profile-panel" class="overlay">
+      <h3>🏆 PERFIL, CONQUISTAS E CODEX <button id="profile-close" class="btn small">X</button></h3><div id="profile-content"></div>
+    </div>
+    <div id="npc-panel" class="overlay centered"><h3 id="npc-name">VIAJANTE</h3><p id="npc-dialogue"></p><button id="npc-buy" class="btn">COMPRAR PÃO</button><button id="npc-close" class="btn small">FECHAR</button></div>
 
     <div id="death-screen" class="overlay centered" style="display:none">
       <h2>VOCÊ FOI DERROTADO</h2>
@@ -175,6 +185,10 @@
     <div id="cutscene" class="overlay" style="display:none">
       <div id="cutscene-text"></div>
       <button id="btn-skip" class="btn small">PULAR</button>
+    </div>
+    <div id="travel-event" class="overlay centered">
+      <h3 id="travel-event-title">Evento de viagem</h3><p>Escolha como prosseguir:</p>
+      <button class="btn" data-travel-choice="repair">REPARAR</button><button class="btn" data-travel-choice="detour">DESVIAR</button><button class="btn" data-travel-choice="explore">EXPLORAR</button><button class="btn" data-travel-choice="stop">PARAR</button>
     </div>
 
     <div id="transition" class="transition">
@@ -194,8 +208,26 @@
       <h2>Configurações</h2>
       <label>Qualidade <select id="cfg-quality"><option>Alta</option><option>Média</option><option>Baixa</option></select></label>
       <label>Volume Geral <input type="range" id="cfg-volume" min="0" max="100" value="80"></label>
+      <label>Música <input type="range" id="cfg-music" min="0" max="100" value="70"></label>
+      <label>Efeitos <input type="range" id="cfg-effects" min="0" max="100" value="80"></label>
+      <label>Ambiente <input type="range" id="cfg-ambient" min="0" max="100" value="65"></label>
+      <label>Interface <input type="range" id="cfg-interface" min="0" max="100" value="80"></label>
       <label>Tamanho UI <input type="range" id="cfg-ui" min="80" max="130" value="100"></label>
+      <label>Tamanho do texto <input type="range" id="cfg-text-size" min="80" max="160" value="100"></label>
+      <label>Contraste <select id="cfg-contrast"><option value="normal">Normal</option><option value="high">Alto</option></select></label>
       <label>Sensibilidade da câmera <input type="range" id="cfg-sensitivity" min="50" max="200" value="100"></label>
+      <label>Distância da câmera <input type="range" id="cfg-camera-distance" min="4" max="16" value="9"></label>
+      <label>Tremor de câmera <input type="range" id="cfg-camera-shake" min="0" max="100" value="100"></label>
+      <label>Resolução <select id="cfg-resolution"><option value="1">100%</option><option value="0.75">75%</option><option value="0.5">50%</option><option value="1.5">150%</option></select></label>
+      <label>Distância de visão <input type="range" id="cfg-view-distance" min="1" max="5" value="2"></label>
+      <label>Densidade de vegetação <input type="range" id="cfg-vegetation" min="0" max="100" value="100"></label>
+      <label>Texturas <select id="cfg-textures"><option value="high">Altas</option><option value="medium">Médias</option><option value="low">Baixas</option></select></label>
+      <label><input type="checkbox" id="cfg-fullscreen"> Tela cheia</label>
+      <label><input type="checkbox" id="cfg-vsync" checked> VSync</label>
+      <label><input type="checkbox" id="cfg-particles" checked> Partículas</label>
+      <label><input type="checkbox" id="cfg-post" checked> Pós-processamento</label>
+      <label>Tecla interagir <input id="cfg-key-interact" maxlength="12" value="e"></label>
+      <label>Tecla frente <input id="cfg-key-forward" maxlength="12" value="w"></label><label>Tecla trás <input id="cfg-key-back" maxlength="12" value="s"></label><label>Tecla esquerda <input id="cfg-key-left" maxlength="12" value="a"></label><label>Tecla direita <input id="cfg-key-right" maxlength="12" value="d"></label><label>Tecla correr <input id="cfg-key-sprint" maxlength="12" value="shift"></label><label>Tecla pular <input id="cfg-key-jump" maxlength="12" value=" "></label>
       <div style="margin-top:12px"><button id="btn-config-back" class="btn primary">VOLTAR</button></div>
     </div>
   </div>
@@ -205,8 +237,10 @@
       <h2>MULTIPLAYER COOPERATIVO</h2>
       <label>Nome da sala <input id="mp-name" value="Expedição Carpincho" maxlength="24"></label>
       <label>Jogadores máximos <select id="mp-max"><option value="2">2</option><option value="3">3</option><option value="4" selected>4</option></select></label>
+      <label><input id="mp-private" type="checkbox"> Sala privada</label><label>Senha <input id="mp-password" type="password" maxlength="40"></label>
       <button id="btn-mp-create" class="btn primary">CRIAR SALA</button>
       <label>Código da sala <input id="mp-code" maxlength="4" placeholder="ABCD"></label>
+      <label>Função <select id="mp-role"><option value="crew">Tripulação</option><option value="engineer">Engenheiro</option><option value="guard">Guarda</option><option value="scout">Explorador</option></select></label>
       <button id="btn-mp-join" class="btn">ENTRAR COM CÓDIGO</button>
       <p id="mp-status" aria-live="polite"></p>
       <button id="btn-mp-back" class="btn small">VOLTAR</button>

@@ -6,11 +6,19 @@ import { craft } from './crafting/crafting.js';
 import { showNotif } from './ui/ui.js';
 import { Multiplayer } from './multiplayer/multiplayer.js';
 import { renderHotbar } from './ui/hotbar.js';
+import { SettingsManager } from './ui/settings.js';
+import { MenuScene } from './ui/menuScene.js';
+import { AudioManager } from './audio/audioManager.js';
 
 let game=null;
 let multiplayer=null;
+const settingsManager=new SettingsManager();
+let menuScene=null;
+const menuAudio=new AudioManager();
 function initMenu(){
   const $=id=>document.getElementById(id);
+  menuScene=new MenuScene($('menu-canvas'));window.addEventListener('resize',()=>menuScene?.resize());
+  document.querySelectorAll('#menu button,#config button').forEach(button=>button.addEventListener('click',()=>menuAudio.play('ui_click',{channel:'interface'})));
   $('btn-jogar').onclick=()=>{
     document.getElementById('menu').classList.remove('active');
     document.getElementById('char-creation').classList.add('active');
@@ -29,16 +37,16 @@ function initMenu(){
     document.getElementById('menu').classList.remove('active');
     startGame(null, true);
   };
-  const settings=JSON.parse(localStorage.getItem('carpincho_settings')||'{"quality":"Alta","volume":80,"ui":100,"sensitivity":100}');
-  $('cfg-quality').value=settings.quality; $('cfg-volume').value=settings.volume; $('cfg-ui').value=settings.ui; $('cfg-sensitivity').value=settings.sensitivity||100;
+  const settings=settingsManager.load();
+  const fields={quality:'cfg-quality',volume:'cfg-volume',music:'cfg-music',effects:'cfg-effects',ambient:'cfg-ambient',interface:'cfg-interface',ui:'cfg-ui',textSize:'cfg-text-size',contrast:'cfg-contrast',sensitivity:'cfg-sensitivity',cameraDistance:'cfg-camera-distance',cameraShake:'cfg-camera-shake',resolution:'cfg-resolution',viewDistance:'cfg-view-distance',textures:'cfg-textures',vegetation:'cfg-vegetation'};
+  for(const [key,id]of Object.entries(fields))if($(id))$(id).value=settings[key];for(const [key,id]of Object.entries({fullscreen:'cfg-fullscreen',vsync:'cfg-vsync',particles:'cfg-particles',postProcessing:'cfg-post'}))if($(id))$(id).checked=settings[key];for(const action of ['interact','forward','back','left','right','sprint','jump'])$(`cfg-key-${action}`).value=settings.controls[action];
   const applySettings=()=>{
-    const next={quality:$('cfg-quality').value,volume:Number($('cfg-volume').value),ui:Number($('cfg-ui').value),sensitivity:Number($('cfg-sensitivity').value)};
-    localStorage.setItem('carpincho_settings',JSON.stringify(next));
-    document.documentElement.style.setProperty('--ui-scale',next.ui/100);
-    game?.setQuality(next.quality); game?.audio.setVolume(next.volume/100); if(game) game.cameraSensitivity=next.sensitivity/100;
+    const controls={};for(const action of ['interact','forward','back','left','right','sprint','jump'])controls[action]=$(`cfg-key-${action}`).value.toLowerCase()||settings.controls[action];const patch={controls};for(const [key,id]of Object.entries(fields))patch[key]=['quality','contrast','textures'].includes(key)?$(id).value:Number($(id).value);for(const [key,id]of Object.entries({fullscreen:'cfg-fullscreen',vsync:'cfg-vsync',particles:'cfg-particles',postProcessing:'cfg-post'}))patch[key]=$(id).checked;const next=settingsManager.save(patch);
+    document.documentElement.style.setProperty('--ui-scale',next.ui/100);document.documentElement.style.setProperty('--text-scale',next.textSize/100);document.documentElement.dataset.contrast=next.contrast;
+    game?.applySettings(next);
   };
   $('btn-config').onclick=()=>{ document.getElementById('menu').classList.remove('active'); document.getElementById('config').classList.add('active'); };
-  $('cfg-quality').onchange=applySettings; $('cfg-volume').oninput=applySettings; $('cfg-ui').oninput=applySettings; $('cfg-sensitivity').oninput=applySettings; applySettings();
+  document.querySelectorAll('#config input,#config select').forEach(element=>{element.addEventListener(element.type==='range'?'input':'change',applySettings)});applySettings();
   $('btn-config-back').onclick=()=>{ applySettings(); document.getElementById('config').classList.remove('active'); document.getElementById('menu').classList.add('active'); };
   $('btn-creditos').onclick=()=> showNotif('CARPINCHO: THE LOST RAILWAY • MVP web');
   $('btn-multiplayer').onclick=()=>{ $('menu').classList.remove('active'); $('multiplayer').classList.add('active'); };
@@ -63,45 +71,51 @@ function initMenu(){
   };
   $('btn-mp-create').onclick=async()=>{
     $('mp-status').textContent='Conectando ao servidor…';
-    try { const mp=await connectMultiplayer(); mp.createRoom($('mp-name').value,Number($('mp-max').value)); }
+    try { const mp=await connectMultiplayer(); mp.createRoom($('mp-name').value,Number($('mp-max').value),{private:$('mp-private').checked,password:$('mp-password').value}); }
     catch(error){ $('mp-status').textContent=error.message; }
   };
   $('btn-mp-join').onclick=async()=>{
     $('mp-status').textContent='Conectando ao servidor…';
-    try { const mp=await connectMultiplayer(); mp.join($('mp-code').value); }
+    try { const mp=await connectMultiplayer(); mp.join($('mp-code').value,$('mp-password').value,$('mp-role').value); }
     catch(error){ $('mp-status').textContent=error.message; }
   };
   $('btn-sair').onclick=()=> showNotif('Até logo!');
   // in-game UI
-  $('inv-close')?.addEventListener('click',()=> $('inventory-panel').classList.remove('active'));
-  $('craft-close')?.addEventListener('click',()=> $('crafting-panel').classList.remove('active'));
-  $('furnace-close')?.addEventListener('click',()=> $('furnace-panel').classList.remove('active'));
-  $('map-close')?.addEventListener('click',()=> $('map-panel').classList.remove('active'));
-  $('quests-close')?.addEventListener('click',()=> $('quests-panel').classList.remove('active'));
-  $('btn-resume')?.addEventListener('click',()=> $('pause-menu').classList.remove('active'));
+  $('inv-close')?.addEventListener('click',()=> game?.closeMenu());
+  $('craft-close')?.addEventListener('click',()=> game?.closeMenu());
+  $('furnace-close')?.addEventListener('click',()=> game?.closeMenu());
+  $('map-close')?.addEventListener('click',()=> game?.closeMenu());
+  $('quests-close')?.addEventListener('click',()=> game?.closeMenu());
+  $('profile-close')?.addEventListener('click',()=>game?.closeMenu());
+  $('npc-close')?.addEventListener('click',()=>game?.closeMenu());$('npc-buy')?.addEventListener('click',()=>game?.buyFromNpc());
+  $('btn-resume')?.addEventListener('click',()=> game?.closeMenu());
   $('btn-inventory')?.addEventListener('click',()=>{ $('pause-menu').classList.remove('active'); $('inventory-panel').classList.add('active'); renderInventory(); });
-  $('btn-map')?.addEventListener('click',()=>{ $('pause-menu').classList.remove('active'); $('map-panel').classList.add('active'); });
+  $('btn-map')?.addEventListener('click',()=>{ $('pause-menu').classList.remove('active'); $('map-panel').classList.add('active');game?.renderMap() });
   $('btn-quests')?.addEventListener('click',()=>{ $('pause-menu').classList.remove('active'); $('quests-panel').classList.add('active'); });
+  $('btn-profile')?.addEventListener('click',()=>{$('pause-menu').classList.remove('active');$('profile-panel').classList.add('active');game?.renderProfile()});
+  document.querySelectorAll('[data-travel-choice]').forEach(button=>button.addEventListener('click',()=>game?.chooseTravelEvent(button.dataset.travelChoice)));
+  $('chat-send')?.addEventListener('click',()=>{const text=$('chat-input').value.trim();if(text&&multiplayer?.connected){multiplayer.chat(text,$('chat-channel').value);$('chat-input').value=''}});$('chat-input')?.addEventListener('keydown',event=>{if(event.key==='Enter')$('chat-send').click()});
   $('btn-save')?.addEventListener('click',()=> game?.doSave());
   $('btn-quit-menu')?.addEventListener('click',()=> location.reload());
   $('btn-respawn')?.addEventListener('click',()=>{
-    if(game){ game.player.health.current=game.player.health.max; game.player.pos={x:0,y:0.9,z:0}; document.getElementById('death-screen').style.display='none'; showNotif('Respawn!'); }
+    if(game?.respawn({x:0,z:0})) showNotif('Respawn!');
   });
   $('btn-checkpoint')?.addEventListener('click',()=>{
-    if(game){ game.player.health.current=game.player.health.max; game.player.pos={...game.checkpoint,y:0.9}; document.getElementById('death-screen').style.display='none'; }
+    if(game) game.respawn(game.checkpoint);
   });
   $('btn-death-quit')?.addEventListener('click',()=> location.reload());
-  $('btn-skip')?.addEventListener('click',()=> game?.cutscene.skip());
+  $('btn-skip')?.addEventListener('click',()=> game?.skipCutscene());
   $('btn-craft')?.addEventListener('click',()=>{
     const sel=window._selectedRecipe;
     if(!sel) return;
-    const res=craft(sel, window._selectedStation||'crafting_table', game?.player.level||0);
-    if(res.ok){ game?.advanceObjective('craft',res.recipe.output, res.recipe.outputQuantity||1); showNotif('Craftou '+res.recipe.name+' — pressione B para posicionar estruturas'); renderInventory(); renderRecipes(window._selectedStation, game?.player.level||1); } else showNotif(res.reason);
+    const res=craft(sel, window._selectedStation||'crafting_table', game?.player.level||0,game?.craftingContext?.()||{});
+    if(res.ok){ game?.advanceObjective('craft',res.recipe.output, res.recipe.outputQuantity||1);if(res.recipe.category==='train')game?.attachWagon(res.recipe.output);showNotif('Craftou '+res.recipe.name+' — pressione B para posicionar estruturas'); renderInventory(); renderRecipes(window._selectedStation, game?.player.level||1); } else showNotif(res.reason);
   });
   $('btn-smelt')?.addEventListener('click',()=>{
-    if(inventory.has('iron_ore',1) && inventory.has('coal',1)){
-      inventory.remove('iron_ore',1); inventory.remove('coal',1);
-      game.furnace.setInput('iron_ore'); game.furnace.setFuel('coal'); showNotif('Fundindo...');
+    const ore=inventory.has('iron_ore')?'iron_ore':inventory.has('copper_ore')?'copper_ore':null;
+    if(ore && inventory.has('coal',1)){
+      inventory.remove(ore,1); inventory.remove('coal',1);
+      game.furnace.setInput(ore); game.furnace.setFuel('coal'); showNotif('Fundindo...');
     } else showNotif('Precisa 1 minério +1 carvão');
   });
   // quick recipes click
@@ -112,20 +126,21 @@ function initMenu(){
   if(has) $('btn-continuar').disabled=false;
 }
 function startGame(opts, cont=false, mp=null){
+  menuScene?.stop();
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('game').classList.add('active');
   document.getElementById('loading').style.display='none';
   const canvas=document.getElementById('game-canvas');
   game=new Game(canvas);
   window.carpinchoGame=game;
-  const settings=JSON.parse(localStorage.getItem('carpincho_settings')||'{"quality":"Alta"}');
-  game.setQuality(settings.quality||'Alta');
+  const settings=settingsManager.load();game.applySettings(settings);
   if(mp) game.attachMultiplayer(mp);
   // apply fur color if opts
   if(opts?.fur && game.playerMesh){
     game.playerMesh.children.forEach(c=>{ if(c.material) c.material.color.set(opts.fur) });
   }
   game.start();
+  if(!cont)game.playCutscene('Introdução — a locomotiva perdida desperta',()=>{});
   if(cont) showNotif('Continuando aventura...');
   else showNotif('Bem-vindo, '+(opts?.name||'Carpincho')+'! WASD para mover, E para interagir');
   // hide loading

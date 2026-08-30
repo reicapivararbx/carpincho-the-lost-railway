@@ -5,7 +5,7 @@ export function renderRecipes(station='hand', level=1){
   c.innerHTML='';
   for(const r of RecipeDB.byStation(station)){
     const d=document.createElement('div'); d.className='recipe';
-    const check=canCraft(r.id, station, level);
+    const check=canCraft(r.id, station, level,window.carpinchoGame?.craftingContext?.()||{});
     d.textContent=r.name+' ('+r.ingredients.map(i=>i.item+' x'+i.amount).join(', ')+')'+(check.ok?'':' — '+check.reason);
     d.classList.toggle('locked', !check.ok);
     d.onclick=()=>{

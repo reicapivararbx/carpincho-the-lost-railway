@@ -1,0 +1,2 @@
+export const LANDMARK_TYPES=Object.freeze({river:{kind:'water'},cave:{kind:'interior'},mine:{kind:'interior'},ruins:{kind:'structure'},houses:{kind:'structure'},laboratory:{kind:'structure'},watchtower:{kind:'structure'},depot:{kind:'structure'},tunnel:{kind:'rail'},bridge:{kind:'rail'}});
+export function createLandmarkData(region,index=0){const id=region.landmarks[index%region.landmarks.length];return{id:`${region.id}:${id}`,type:id,region:region.id,x:region.center.x+(index-1)*8,z:(index%2?.5:-.5)*18,discovered:false}}

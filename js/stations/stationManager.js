@@ -1,2 +1,2 @@
 import { Station } from './station.js';
-export class StationManager{ constructor(){ this.stations=[new Station('plain_station','Estação Planície',2,10)] } nearest(x,z){ return this.stations[0] } }
+export class StationManager{constructor(){this.stations=[new Station('plain_station','Estação Planície',2,10)]}add(station){this.stations.push(station);return station}nearest(x,z,max=Infinity){const station=[...this.stations].sort((a,b)=>Math.hypot(a.x-x,a.z-z)-Math.hypot(b.x-x,b.z-z))[0];return station&&Math.hypot(station.x-x,station.z-z)<=max?station:null}}

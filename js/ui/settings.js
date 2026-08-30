@@ -1,0 +1,8 @@
+export const DEFAULT_SETTINGS=Object.freeze({quality:'Alta',resolution:1,fullscreen:false,vsync:true,viewDistance:2,textures:'high',vegetation:1,particles:true,postProcessing:true,volume:80,music:70,effects:80,ambient:65,interface:80,ui:100,textSize:100,contrast:'normal',cameraShake:100,sensitivity:100,cameraDistance:9,controls:{forward:'w',back:'s',left:'a',right:'d',interact:'e',sprint:'shift',jump:' '}});
+export function sanitizeSettings(input={}){const next={...DEFAULT_SETTINGS,...input,controls:{...DEFAULT_SETTINGS.controls,...(input.controls||{})}};for(const key of ['volume','music','effects','ambient','interface','ui','textSize','cameraShake','sensitivity'])next[key]=Math.max(0,Math.min(key==='ui'||key==='textSize'||key==='sensitivity'?200:100,Number(next[key])||DEFAULT_SETTINGS[key]));next.cameraDistance=Math.max(4,Math.min(16,Number(next.cameraDistance)||9));next.viewDistance=Math.max(1,Math.min(5,Math.round(Number(next.viewDistance)||2)));next.resolution=Math.max(.5,Math.min(2,Number(next.resolution)||1));return next}
+export class SettingsManager{
+  constructor(storage=globalThis.localStorage){this.storage=storage;this.settings={...DEFAULT_SETTINGS,controls:{...DEFAULT_SETTINGS.controls}}}
+  load(){try{this.settings=sanitizeSettings(JSON.parse(this.storage?.getItem('carpincho_settings')||'{}'))}catch{this.settings=sanitizeSettings()}return this.settings}
+  save(patch={}){this.settings=sanitizeSettings({...this.settings,...patch,controls:{...this.settings.controls,...(patch.controls||{})}});this.storage?.setItem('carpincho_settings',JSON.stringify(this.settings));return this.settings}
+  binding(action){return this.settings.controls[action]}
+}

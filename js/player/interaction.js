@@ -1,1 +1,1 @@
-export function interact(raycaster, objects, max=3){ return null }
+export function interact(raycaster,objects,max=3){if(!raycaster?.intersectObjects)return {ok:false,reason:'raycaster inválido'};const hits=raycaster.intersectObjects(objects,true).filter(hit=>hit.distance<=max);return hits.length?{ok:true,hit:hits[0],object:hits[0].object}:{ok:false,reason:'fora de alcance'}}
