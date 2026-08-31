@@ -4,15 +4,15 @@ Este documento descreve o trabalho restante para levar o projeto do MVP atual at
 
 ## Estado atual verificado
 
-- Stack: HTML5, CSS3, JavaScript ES Modules, Three.js e Vite.
+- Stack atual: HTML5, CSS3, JavaScript ES Modules, Canvas 2D e Vite.
 - `npm install`: executado com sucesso.
 - `npm test`: executado com sucesso; testes atuais de crafting, fornalha, save/migração passam.
 - `npm run build`: executado com sucesso.
 - `npm run dev`: inicia o Vite local.
 - `npm run preview`: inicia o preview local.
 - Deploy: `/railsgame` publicado na VM `vm-matteo`.
-- Canvas Three.js: usa o elemento HTML `#game-canvas`; o erro `canvas is not defined` foi corrigido.
-- Cena 3D: terreno, trilhos, estação, trem, capivara, recursos e inimigos básicos.
+- Canvas 2D: usa o elemento HTML `#game-canvas`, com câmera superior, escala configurável e renderização responsiva.
+- Cena 2D realista: terreno texturizado, trilhos, estação, trem, capivara, recursos, NPCs e inimigos.
 - Movimento: WASD, sprint, câmera terceira pessoa e salto básico.
 - Trem: combustível, integridade, aceleração, freio, entrada/saída e trilho bloqueado.
 - Inventário: peso, stack e crafting integrado.
@@ -108,7 +108,7 @@ Este documento descreve o trabalho restante para levar o projeto do MVP atual at
 - [x] Implementar tamanho de texto, contraste, tremor de câmera e sensibilidade.
 - [x] Criar perfil, estatísticas, conquistas e coleções.
 - [x] Melhorar tela de morte com checkpoint, retry, menu e bloqueio completo de input.
-- [x] Criar menu principal com cenário 3D animado, locomotiva, partículas e áudio.
+- [x] Criar menu principal com cenário 2D animado, locomotiva, partículas e áudio.
 
 ### 9. Multiplayer e segurança
 
@@ -162,10 +162,10 @@ Não marcar este documento como concluído apenas porque a build passa. Cada ite
 ## Evidência final de conclusão — 30/08/2026
 
 - `npm test`: 14 arquivos de teste, todos aprovados, cobrindo player/câmera, hotbar, crafting, mineração, trem/carga, IA/chefes, quests, save/checksum/backup, mundo, performance e autoridade multiplayer.
-- `npm run build`: aprovado; aplicação e Three.js separados em chunks, sem alerta de chunk acima de 500 kB.
+- `npm run build`: aprovado; aplicação Canvas 2D empacotada sem dependência gráfica 3D no bundle.
 - `npm run dev`: Vite iniciado em `http://127.0.0.1:5173/railsgame/` e encerrado normalmente após os testes.
-- `npm run preview`: build de produção iniciada em `http://127.0.0.1:4173/railsgame/`; HTML, JS, Three.js e CSS retornaram HTTP 200.
-- Firefox headless: `test/browser-player-state.html` exibiu `PASS: 8 ESTADOS INTEGRADOS`; `test/browser-game-smoke.html` exibiu `OK • Planície • 1 vagão • 39 recursos` após uma atualização e renderização WebGL reais.
+- `npm run preview`: build de produção iniciada em `http://127.0.0.1:4173/railsgame/`; HTML, JS, assets WebP e CSS retornaram HTTP 200.
+- Browser smoke: `test/browser-player-state.html` valida os oito estados; `test/browser-game-smoke.html` aguarda e valida o Canvas 2D e todos os assets realistas.
 - Multiplayer real: dois clientes WebSocket validaram sala privada/senha, entrada por função, sincronização de estado, chat filtrado e migração do host.
 - Rede local: HTML, favicon, 10 folhas de estilo e módulo principal auditados sem 404 sob `/railsgame`.
 - Deploy existente: `https://m.zanona.com.br/railsgame/`, favicon, bundle JS e CSS retornaram HTTP 200 em auditoria somente leitura.

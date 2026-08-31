@@ -136,9 +136,7 @@ function startGame(opts, cont=false, mp=null){
   const settings=settingsManager.load();game.applySettings(settings);
   if(mp) game.attachMultiplayer(mp);
   // apply fur color if opts
-  if(opts?.fur && game.playerMesh){
-    game.playerMesh.children.forEach(c=>{ if(c.material) c.material.color.set(opts.fur) });
-  }
+  if(opts?.fur) game.setFurColor?.(opts.fur);
   game.start();
   if(!cont)game.playCutscene('Introdução — a locomotiva perdida desperta',()=>{});
   if(cont) showNotif('Continuando aventura...');

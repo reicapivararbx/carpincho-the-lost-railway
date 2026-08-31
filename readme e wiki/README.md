@@ -2,7 +2,7 @@
 
 > **The railway is lost. The journey is yours.**
 
-**Carpincho: The Lost Railway** é um jogo 3D de aventura, exploração, sobrevivência leve, crafting, combate e progressão, centrado em uma locomotiva que funciona como veículo, base móvel, oficina e armazenamento.
+**Carpincho: The Lost Railway** é um jogo 2D de aventura, exploração, sobrevivência leve, crafting, combate e progressão, centrado em uma locomotiva que funciona como veículo, base móvel, oficina e armazenamento.
 
 ## 🎮 Visão geral
 
@@ -23,12 +23,13 @@ O jogador controla uma capivara que recebe uma locomotiva antiga e parte para ex
 
 ## 🧱 Tecnologia
 
-O projeto é um **jogo web 3D**.
+O projeto é um **jogo web 2D com direção visual realista**.
 
 - **HTML5** para a estrutura da aplicação
 - **CSS3** para interface e HUD
 - **JavaScript ES6+** para gameplay e sistemas
-- **Three.js** para renderização 3D
+- **Canvas 2D** para renderização superior, iluminação, clima e efeitos
+- **WebP com transparência** para personagens, vegetação e locomotiva realistas
 - **Node.js + WebSocket/WebRTC**, quando necessário, para recursos multiplayer
 - **IndexedDB** para saves locais mais complexos
 

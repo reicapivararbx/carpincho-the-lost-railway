@@ -6,7 +6,7 @@ Esta wiki descreve a arquitetura, gameplay e sistemas planejados para **Carpinch
 
 ## 1. Conceito
 
-**Carpincho: The Lost Railway** é um jogo 3D para navegador em que o jogador controla uma capivara e atravessa uma antiga rede ferroviária com uma locomotiva personalizável.
+**Carpincho: The Lost Railway** é um jogo 2D de visão superior para navegador, com direção visual realista, em que o jogador controla uma capivara e atravessa uma antiga rede ferroviária com uma locomotiva personalizável.
 
 A locomotiva funciona como:
 
@@ -52,7 +52,7 @@ O projeto é web-first.
 - HTML5
 - CSS3
 - JavaScript ES6+
-- Three.js
+- Canvas 2D
 
 ### Servidor, quando necessário
 
@@ -66,7 +66,7 @@ O projeto é web-first.
 
 ### Formatos de assets
 
-- GLB/GLTF para modelos 3D
+- WebP com transparência para sprites realistas
 - formatos de áudio compatíveis com navegadores
 - texturas otimizadas para web
 
@@ -1424,7 +1424,6 @@ Polimento + otimização + release.
 npm create vite@latest carpincho-the-lost-railway -- --template vanilla
 cd carpincho-the-lost-railway
 npm install
-npm install three
 ```
 
 ### Rodar

@@ -9,7 +9,7 @@
 .bar.stamina i{background:#2ecc71}
 .bar.boss i{background:#e74c3c}
 #hud-center{display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none}
-#crosshair{font-size:18px;opacity:0.7}
+#crosshair{display:none}
 #prompt{background:rgba(0,0,0,0.7);padding:4px 10px;border-radius:12px;font-size:12px}
 #objective-tracker{background:rgba(0,0,0,.72);border-left:3px solid var(--gold);padding:7px 11px;border-radius:5px;max-width:310px;text-align:left;font-size:12px;line-height:1.45}
 #boss-bar{background:rgba(0,0,0,0.8);padding:6px 12px;border-radius:8px;text-align:center;min-width:300px;border:1px solid #e74c3c}
