@@ -1,4 +1,4 @@
-#game{position:relative}
+#game{position:absolute;inset:0;width:100%;height:100%}
 #game-canvas{width:100%;height:100%;display:block}
 #hud{position:absolute;inset:0;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:10px}
 #hud-top{display:flex;gap:12px;flex-wrap:wrap;background:rgba(0,0,0,0.6);padding:6px 10px;border-radius:8px;pointer-events:auto;font-size:12px}
