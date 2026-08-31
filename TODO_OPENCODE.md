@@ -10,7 +10,7 @@ Este documento descreve o trabalho restante para levar o projeto do MVP atual at
 - `npm run build`: executado com sucesso.
 - `npm run dev`: inicia o Vite local.
 - `npm run preview`: inicia o preview local.
-- Deploy: `/railsgame` publicado na VM `vm-matteo`.
+- Deploy canônico: `/capyrails/` publicado na VM `vm-matteo`; `/railsgame/` mantido como redirecionamento legado.
 - Canvas 2D: usa o elemento HTML `#game-canvas`, com câmera superior, escala configurável e renderização responsiva.
 - Cena 2D realista: terreno texturizado, trilhos, estação, trem, capivara, recursos, NPCs e inimigos.
 - Movimento: WASD, sprint, câmera terceira pessoa e salto básico.
@@ -163,10 +163,10 @@ Não marcar este documento como concluído apenas porque a build passa. Cada ite
 
 - `npm test`: 14 arquivos de teste, todos aprovados, cobrindo player/câmera, hotbar, crafting, mineração, trem/carga, IA/chefes, quests, save/checksum/backup, mundo, performance e autoridade multiplayer.
 - `npm run build`: aprovado; aplicação Canvas 2D empacotada sem dependência gráfica 3D no bundle.
-- `npm run dev`: Vite iniciado em `http://127.0.0.1:5173/railsgame/` e encerrado normalmente após os testes.
-- `npm run preview`: build de produção iniciada em `http://127.0.0.1:4173/railsgame/`; HTML, JS, assets WebP e CSS retornaram HTTP 200.
+- `npm run dev`: Vite iniciado sob a base `/capyrails/` e encerrado normalmente após os testes.
+- `npm run preview`: build de produção iniciada sob `/capyrails/`; HTML, JS, assets WebP e CSS retornaram HTTP 200.
 - Browser smoke: `test/browser-player-state.html` valida os oito estados; `test/browser-game-smoke.html` aguarda e valida o Canvas 2D e todos os assets realistas.
 - Multiplayer real: dois clientes WebSocket validaram sala privada/senha, entrada por função, sincronização de estado, chat filtrado e migração do host.
-- Rede local: HTML, favicon, 10 folhas de estilo e módulo principal auditados sem 404 sob `/railsgame`.
-- Deploy existente: `https://m.zanona.com.br/railsgame/`, favicon, bundle JS e CSS retornaram HTTP 200 em auditoria somente leitura.
+- Rede local: HTML, favicon, 10 folhas de estilo e módulo principal auditados sem 404 sob `/capyrails/`.
+- Deploy canônico: `https://m.zanona.com.br/capyrails/`; a rota antiga `/railsgame/` redireciona para ela.
 - `git diff --check`: aprovado, sem erros de whitespace.

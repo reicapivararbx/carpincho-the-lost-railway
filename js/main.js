@@ -49,6 +49,7 @@ function initMenu(){
   document.querySelectorAll('#config input,#config select').forEach(element=>{element.addEventListener(element.type==='range'?'input':'change',applySettings)});applySettings();
   $('btn-config-back').onclick=()=>{ applySettings(); document.getElementById('config').classList.remove('active'); document.getElementById('menu').classList.add('active'); };
   $('btn-creditos').onclick=()=> showNotif('CARPINCHO: THE LOST RAILWAY • MVP web');
+  $('btn-projects').onclick=()=> window.location.assign('/');
   $('btn-multiplayer').onclick=()=>{ $('menu').classList.remove('active'); $('multiplayer').classList.add('active'); };
   $('btn-mp-back').onclick=()=>{ $('multiplayer').classList.remove('active'); $('menu').classList.add('active'); };
   const launchMultiplayer=(code)=>{
@@ -66,7 +67,7 @@ function initMenu(){
       else if(message.type==='ERROR') status.textContent=message.payload.msg;
     });
     const wsProtocol=location.protocol==='https:'?'wss':'ws';
-    await multiplayer.connect(`${wsProtocol}://${location.host}/railsgame/ws`);
+    await multiplayer.connect(`${wsProtocol}://${location.host}/capyrails/ws`);
     return multiplayer;
   };
   $('btn-mp-create').onclick=async()=>{

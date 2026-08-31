@@ -2,6 +2,8 @@
 
 > **The railway is lost. The journey is yours.**
 
+**🎮 Jogue agora: [m.zanona.com.br/capyrails](https://m.zanona.com.br/capyrails/)** · **🌐 [Portal Capy](https://m.zanona.com.br/)**
+
 **Carpincho: The Lost Railway** é um jogo 2D de aventura, exploração, sobrevivência leve, crafting, combate e progressão, centrado em uma locomotiva que funciona como veículo, base móvel, oficina e armazenamento.
 
 ## 🎮 Visão geral
