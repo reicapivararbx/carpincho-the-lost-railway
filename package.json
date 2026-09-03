@@ -7,6 +7,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "node --test",
+    "verify:deployment": "node scripts/verify-deployment.mjs",
     "mp": "node server/server.js"
   },
   "dependencies": {

@@ -21,3 +21,7 @@ Thumbs.db
 # Vite
 .vite/
 coverage/
+
+# Local browser QA artifacts
+.playwright-mcp/
+touch-*.png

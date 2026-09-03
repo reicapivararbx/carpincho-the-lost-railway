@@ -265,6 +265,20 @@ npm run build
 npm run preview
 ```
 
+### Controles
+
+- Desktop/notebook: WASD, setas e atalhos de teclado continuam disponíveis.
+- Celular/tablet: o jogo detecta entrada touch-first e mostra setas de movimento e o botão contextual `☝️ Interagir`.
+- Notebook híbrido com mouse/trackpad principal: mantém a interface de desktop para não cobrir o jogo desnecessariamente.
+
+### Verificar o deploy
+
+```bash
+npm run verify:deployment
+```
+
+O smoke test valida o portal, os quatro projetos, assets compilados, `/api/users/me`, `/admin/`, o redirect `/railsgame/` e mensagens reais nos WebSockets `/ws`, `/capyrails/ws` e `/railsgame/ws` (legado). Para homologação, informe outra origem com `CAPY_BASE_URL`.
+
 > Os comandos acima assumem um projeto configurado com Vite. Ajuste os scripts do `package.json` caso a stack final seja diferente.
 
 ## 🧪 Testes
