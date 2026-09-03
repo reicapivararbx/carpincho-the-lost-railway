@@ -1,4 +1,4 @@
 /* quests.css — per spec §83 */
-#quests-panel{left:10px;bottom:10px;width:360px;max-height:50vh}
+#quests-panel{left:10px;top:60px;width:360px;max-height:50vh}
 #quest-list .quest{background:rgba(212,168,67,0.1);border:1px solid rgba(212,168,67,0.2);border-radius:8px;padding:8px;margin:6px 0;font-size:12px}
 #quests-panel h3, #quest-list b{color:var(--gold)}

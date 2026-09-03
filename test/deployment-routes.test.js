@@ -19,6 +19,11 @@ test('build e multiplayer usam a rota canônica do Capyrails', async () => {
   assert.match(main, /\/capyrails\/ws/);
   assert.doesNotMatch(main, /\/railsgame\/ws/);
   assert.match(html, /id="btn-projects"/);
+  assert.match(html, /data-touch-controls[^>]*hidden/);
+  assert.equal((html.match(/data-touch-action=/g)||[]).length, 4);
+  assert.match(html, /touch-interaction-icon[^>]*aria-hidden="true"[^>]*>☝️</);
   assert.match(menuCss, /#menu\{[^}]*position:absolute;[^}]*inset:0;[^}]*height:100%/);
   assert.match(hudCss, /#game\{[^}]*position:absolute;[^}]*inset:0;[^}]*height:100%/);
+  assert.match(hudCss, /#hud\.touch-input \.controls-hint\{display:none\}/);
+  assert.match(hudCss, /\.touch-direction-pad\{[^}]*display:grid/);
 });

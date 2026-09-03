@@ -94,10 +94,10 @@
           <span class="hud-item" id="hud-region">🗺️ Planície</span>
         </div>
       </div>
+      <div id="objective-tracker" aria-live="polite"></div>
       <div id="hud-center">
         <div id="crosshair" aria-hidden="true"></div>
         <div id="prompt"></div>
-        <div id="objective-tracker" aria-live="polite"></div>
         <div id="boss-bar" style="display:none">
           <div id="boss-name">GUARDIÃO DA FLORESTA</div>
           <div class="bar boss"><i id="bar-boss" style="width:100%"></i></div>
@@ -113,6 +113,20 @@
         <b id="train-destination">DESTINO: FLORESTA</b><span>VELO <i id="train-speed">0</i> km/h</span><span>DIST <i id="train-distance">0</i> km</span><span>COMB <i id="train-fuel">80</i>%</span><span>INTEG <i id="train-integrity">100</i>%</span>
       </div>
       <div id="chat"><div id="chat-log"></div><select id="chat-channel"><option value="group">Grupo</option><option value="proximity">Proximidade</option></select><input id="chat-input" maxlength="200" placeholder="Mensagem"><button id="chat-send" class="btn small">ENVIAR</button></div>
+      <div class="touch-controls" data-touch-controls aria-label="Controles por toque" role="group" hidden>
+        <div class="touch-direction-pad" aria-label="Movimentação">
+          <span class="touch-control-spacer" aria-hidden="true"></span>
+          <button class="touch-control-button" type="button" data-touch-action="forward" aria-label="Mover para frente" aria-pressed="false">↑</button>
+          <span class="touch-control-spacer" aria-hidden="true"></span>
+          <button class="touch-control-button" type="button" data-touch-action="left" aria-label="Mover para a esquerda" aria-pressed="false">←</button>
+          <button class="touch-control-button" type="button" data-touch-action="back" aria-label="Mover para trás" aria-pressed="false">↓</button>
+          <button class="touch-control-button" type="button" data-touch-action="right" aria-label="Mover para a direita" aria-pressed="false">→</button>
+        </div>
+        <button class="touch-interaction-button" type="button" data-touch-interaction aria-label="Interagir" aria-pressed="false">
+          <span class="touch-interaction-icon" aria-hidden="true">☝️</span>
+          <span>Interagir</span>
+        </button>
+      </div>
     </div>
 
     <!-- Overlays -->

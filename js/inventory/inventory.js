@@ -6,7 +6,13 @@ export class Inventory{
     this.maxWeight = maxWeight;
     this._listeners=[];
   }
-  onChange(fn){ this._listeners.push(fn) }
+  onChange(fn){
+    this._listeners.push(fn);
+    return ()=>{
+      const index=this._listeners.indexOf(fn);
+      if(index>=0)this._listeners.splice(index,1);
+    };
+  }
   _emit(){ this._listeners.forEach(f=>f(this)) }
   count(id){ return this.items.get(id)||0 }
   item(id){ return ItemDB.lookup(id) }

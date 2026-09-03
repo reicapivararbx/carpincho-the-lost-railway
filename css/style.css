@@ -1,5 +1,5 @@
 *{margin:0;padding:0;box-sizing:border-box}
-:root{--gold:#d4a843;--bg:#0f1f0a;--panel:#1a2e12;--text:#fdf6e3;--ui-scale:1;--text-scale:1}
+:root{--gold:#d4a843;--bg:#0f1f0a;--panel:#1a2e12;--text:#fdf6e3;--ui-scale:1;--text-scale:1;--touch-surface:rgba(8,18,8,.82);--touch-surface-active:rgba(39,66,23,.94);--touch-border:rgba(212,168,67,.62);--touch-shadow:rgba(0,0,0,.38);--space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:20px;--space-14:56px;--space-18:72px}
 body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);overflow:hidden}
 #app{width:100vw;height:100vh;position:relative;font-size:calc(16px * var(--ui-scale) * var(--text-scale))}
 html[data-contrast="high"]{--gold:#ffd84d;--bg:#000;--panel:#080808;--text:#fff}html[data-contrast="high"] .overlay,html[data-contrast="high"] .panel{border-color:#fff}

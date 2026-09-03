@@ -132,6 +132,7 @@ function startGame(opts, cont=false, mp=null){
   document.getElementById('game').classList.add('active');
   document.getElementById('loading').style.display='none';
   const canvas=document.getElementById('game-canvas');
+  game?.destroy();
   game=new Game(canvas);
   window.carpinchoGame=game;
   const settings=settingsManager.load();game.applySettings(settings);
@@ -141,7 +142,7 @@ function startGame(opts, cont=false, mp=null){
   game.start();
   if(!cont)game.playCutscene('Introdução — a locomotiva perdida desperta',()=>{});
   if(cont) showNotif('Continuando aventura...');
-  else showNotif('Bem-vindo, '+(opts?.name||'Carpincho')+'! WASD para mover, E para interagir');
+  else showNotif(`Bem-vindo, ${opts?.name||'Carpincho'}! ${game.touchControls?.isTouchInput?'Use as setas para mover e ☝️ para interagir':'WASD para mover, E para interagir'}`);
   // hide loading
   document.getElementById('loading').style.display='none';
 }

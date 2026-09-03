@@ -1,0 +1,19 @@
+export function destroyGame(game){
+  if(game.destroyed)return;
+  game.destroyed=true;
+  game.running=false;
+  if(game._animationFrameId!==null)cancelAnimationFrame(game._animationFrameId);
+  game._animationFrameId=null;
+  game.touchControls?.destroy();
+  game._cleanup.forEach(cleanup=>cleanup());
+  game._cleanup=[];
+  removeEventListener('keydown',game._onKeyDown);
+  removeEventListener('keyup',game._onKeyUp);
+  removeEventListener('resize',game._onResize);
+  removeEventListener('keydown',game._onDebugKey);
+  game.canvas.removeEventListener('mousemove',game._onMouseMove);
+  game.canvas.removeEventListener('mousedown',game._onMouseDown);
+  game.canvas.removeEventListener('mouseup',game._onMouseUp);
+  game.canvas.removeEventListener('contextmenu',game._onContextMenu);
+  game.canvas.removeEventListener('wheel',game._onWheel);
+}
