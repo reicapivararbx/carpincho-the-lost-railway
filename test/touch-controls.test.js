@@ -75,7 +75,9 @@ test('game touch callbacks share movement state and the interaction path', () =>
     keys: {},
     brokenRepaired: true,
     train: { inTrain: false },
+    player: { pos: { x: 0, z: 0 } },
     playerState: { is: () => false },
+    nearBrokenRail() { return false; },
     interactionCount: 0,
     tryInteract() {
       this.interactionCount += 1;
@@ -99,6 +101,7 @@ test('touch arrows drive the train and touch interaction is blocked while the ga
     brokenRepaired: true,
     player: { pos: { x: 0, z: 0 } },
     playerState: { is: (...states) => states.includes('IN_TRAIN') },
+    nearBrokenRail() { return false; },
     accelerate() { accelerated += 1; },
     tryInteract() { interactions += 1; }
   };
