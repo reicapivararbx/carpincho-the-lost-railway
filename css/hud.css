@@ -162,6 +162,8 @@
 #hotbar{display:flex;justify-content:center;gap:5px;margin:8px auto 4px;pointer-events:auto}
 .hotbar-slot{position:relative;width:46px;height:46px;padding:3px;background:rgba(8,12,7,.85);border:1px solid rgba(253,246,227,.28);border-radius:6px;color:var(--text);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center}
 .hotbar-slot b{position:absolute;left:4px;top:2px;font-size:10px;opacity:.7}.hotbar-slot span{font-size:20px;line-height:20px}.hotbar-slot small{font-size:10px;min-height:11px}.hotbar-slot.selected{border-color:var(--gold);box-shadow:0 0 12px rgba(212,168,67,.65);transform:translateY(-3px)}
+.hotbar-slot.drag-over{border-color:var(--gold);background:rgba(212,168,67,.18);box-shadow:0 0 14px rgba(212,168,67,.45)}
+.hotbar-slot[draggable="true"]{cursor:grab}.hotbar-slot[draggable="true"]:active{cursor:grabbing}
 .notif{background:rgba(0,0,0,0.8);border:1px solid var(--gold);padding:4px 10px;border-radius:12px;font-size:12px;animation:fade 2.5s forwards}
 @keyframes fade{0%{opacity:1}80%{opacity:1}100%{opacity:0;transform:translateY(-10px)}}
 .controls-hint{font-size:10px;opacity:0.5;text-align:center}
