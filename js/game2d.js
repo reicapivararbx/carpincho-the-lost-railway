@@ -20,6 +20,7 @@ import { updateHUD } from './ui/hud.js';
 import { renderInventory } from './ui/inventoryUI.js';
 import { renderRecipes } from './ui/craftingUI.js';
 import { showNotif } from './ui/ui.js';
+import { MissionTracker } from './ui/missionTracker.js';
 import { rollLoot } from './data/lootTables.js';
 import { AudioManager } from './audio/audioManager.js';
 import { DayNight } from './world/dayNight.js';
@@ -89,7 +90,7 @@ export class Game{
     this.particlePool=new ObjectPool(()=>({active:false,x:0,z:0,vx:0,vz:0,life:0,size:.12,color:'#e2bf77'}),{initial:30,reset:(item,data,active)=>{item.active=active;if(data)Object.assign(item,data)}});
     this.projectilePool=new ObjectPool(()=>({active:false,x:0,z:0,vx:0,vz:0,life:0,size:.08,color:'#ffe19a'}),{initial:12,reset:(item,data,active)=>{item.active=active;if(data)Object.assign(item,data)}});
     this.mobPool=new ObjectPool(()=>({active:false,x:0,z:0}),{initial:8,reset:(item,data,active)=>{item.active=active;if(data)Object.assign(item,data)}});
-    this.assets={};this.patterns={};this.decor=[];this._hudTimer=0;this._streamTimer=0;this._worldTimer=0;this._saveCd=12;this.networkTimer=0;this._lastObjectiveText='';this._animationFrameId=null;this._cleanup=[];this.destroyed=false;
+    this.assets={};this.patterns={};this.decor=[];this._hudTimer=0;this._streamTimer=0;this._worldTimer=0;this._saveCd=12;this.networkTimer=0;this.missionTracker=new MissionTracker();this._animationFrameId=null;this._cleanup=[];this.destroyed=false;
     this.init();
   }
 
@@ -241,10 +242,18 @@ export class Game{
   renderQuests(){const list=document.getElementById('quest-list');if(!list)return;list.innerHTML='';for(const quest of this.quests.quests){const card=document.createElement('div');card.className='quest-card';card.innerHTML=`<b>${quest.completed?'✓ ':''}${quest.name}</b><br>${quest.objectives.map(objective=>`${objective.done?'☑':'☐'} ${objective.description}${objective.amount>1?` (${objective.progress||0}/${objective.amount})`:''}`).join('<br>')}`;list.appendChild(card)}}
   renderMap(){const canvas=document.getElementById('map-canvas');if(!canvas)return;const ctx=canvas.getContext('2d'),width=canvas.width,height=canvas.height;ctx.fillStyle='#102018';ctx.fillRect(0,0,width,height);for(const region of REGIONS){const x=(region.bounds[0]+50)/520*width,w=(region.bounds[1]-region.bounds[0])/520*width;ctx.fillStyle=cssColor(region.color);ctx.globalAlpha=.72;ctx.fillRect(x,20,w,height-40);ctx.globalAlpha=1;ctx.fillStyle='#f4e9c6';ctx.font='9px sans-serif';ctx.fillText(region.name,x+3,16)}ctx.strokeStyle='#c3aa70';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,height*.55);ctx.lineTo(width,height*.55);ctx.stroke();for(const marker of this.fogOfWar.visibleMarkers()){ctx.fillStyle='#f4d56b';ctx.beginPath();ctx.arc((marker.x+50)/520*width,height*.55+marker.z/90*height,2.5,0,TAU);ctx.fill()}ctx.fillStyle='#fff';ctx.beginPath();ctx.arc((this.player.pos.x+50)/520*width,height*.55+this.player.pos.z/90*height,4,0,TAU);ctx.fill()}
   renderProfile(){const panel=document.getElementById('profile-content');if(panel)panel.innerHTML=`<b>Nível ${this.player.level}</b> • ${this.player.xp}/100 XP<br>Tempo: ${Math.floor(this.profile.stats.playTime||0)}s<br>Inimigos: ${this.profile.stats.enemiesDefeated||0}<br>Recursos: ${this.profile.stats.resourcesMined||0}<br>Regiões: ${this.profile.collections.regions.size}/${REGIONS.length}<hr>Codex: ${this.codex.discoveries.size} descobertas`}
-  renderObjective(){const element=document.getElementById('objective-tracker');if(!element)return;const quest=this.quests.active();if(!quest){if(this._lastObjectiveText!=='Nenhum objetivo ativo'){element.textContent='Nenhum objetivo ativo';this._lastObjectiveText='Nenhum objetivo ativo'}return}const next=quest.objectives.find(objective=>!objective.done),text=`<b>${quest.name}</b><br>${next?`▸ ${next.description}${next.amount>1?` (${next.progress||0}/${next.amount})`:''}`:'✓ Objetivos concluídos'}`;if(text!==this._lastObjectiveText){element.innerHTML=text;this._lastObjectiveText=text}}
+  renderObjective(){this.missionTracker.render(this.quests.active())}
   updateQuestHUD(){this.renderObjective();this.tryAutoRepairRails()}
+  syncMissionTrackerOffset(){
+    const hud=document.getElementById('hud');
+    const top=document.getElementById('hud-top');
+    if(!hud||!top)return;
+    const gap=8;
+    const offset=Math.ceil(top.offsetHeight+gap+10);
+    hud.style.setProperty('--hud-top-offset',`${Math.max(52,offset)}px`);
+  }
   applySave(data){try{if(data.inventory)inventory.fromJSON(data.inventory);if(data.player){this.player.level=Number.isFinite(data.player.level)?data.player.level:1;this.player.xp=Number.isFinite(data.player.xp)?data.player.xp:0;this.player.coins=Number.isFinite(data.player.coins)?data.player.coins:100;if(data.player.pos&&Number.isFinite(data.player.pos.x)&&Number.isFinite(data.player.pos.z))this.player.pos={x:data.player.pos.x,y:.9,z:data.player.pos.z};if(data.player.train){this.train.fromJSON(data.player.train);if(this.train.inTrain){this.transitionPlayer(PLAYER_STATES.ENTERING_TRAIN,{reason:'load-save'});this.transitionPlayer(PLAYER_STATES.IN_TRAIN,{reason:'load-save'})}}}if(data.quests)this.quests.quests=data.quests;hotbarFromJSON(data.hotbar);if(data.world){this.brokenRepaired=!!data.world.brokenRepaired;this.railObj.broken.visible=!this.brokenRepaired;if(data.world.construction){this.construction.fromJSON(data.world.construction);for(const structure of this.construction.placed)this.createStation(structure.type,structure.x,structure.z,false,structure.id)}if(data.world.fog)this.fogOfWar.fromJSON(data.world.fog);if(data.world.codex)this.codex.fromJSON(data.world.codex);if(data.world.dialogue){this.dialogue.history=data.world.dialogue.history||[];this.dialogue.flags=data.world.dialogue.flags||{}}if(data.world.forestLoaded)this.loadForest()}if(data.profile)this.profile.fromJSON(data.profile);if(data.reputation)this.reputation.fromJSON(data.reputation);if(data.missionCargo)this.missionCargo.fromJSON(data.missionCargo)}catch{}}
-  onResize(){const rect=this.canvas.getBoundingClientRect(),width=rect.width||innerWidth,height=rect.height||innerHeight,ratio=Math.min(2,(devicePixelRatio||1)*(Number(this.settings.resolution)||1));this.width=width;this.height=height;this.pixelRatio=ratio;this.canvas.width=Math.max(1,Math.floor(width*ratio));this.canvas.height=Math.max(1,Math.floor(height*ratio));this.ctx.setTransform(ratio,0,0,ratio,0,0);if(this.assets.grass)this.patterns.grass=this.ctx.createPattern(this.assets.grass,'repeat')}
+  onResize(){const rect=this.canvas.getBoundingClientRect(),width=rect.width||innerWidth,height=rect.height||innerHeight,ratio=Math.min(2,(devicePixelRatio||1)*(Number(this.settings.resolution)||1));this.width=width;this.height=height;this.pixelRatio=ratio;this.canvas.width=Math.max(1,Math.floor(width*ratio));this.canvas.height=Math.max(1,Math.floor(height*ratio));this.ctx.setTransform(ratio,0,0,ratio,0,0);if(this.assets.grass)this.patterns.grass=this.ctx.createPattern(this.assets.grass,'repeat');this.syncMissionTrackerOffset()}
   setQuality(quality){this.settings.quality=quality;this.onResize()}
   applySettings(settings={}){this.settings={...this.settings,...settings,controls:{...this.settings.controls,...(settings.controls||{})}};this.cameraDistance=Number(settings.cameraDistance)||9;this.camera.zoom=clamp(320/this.cameraDistance,22,54);this.worldStreaming.setLoadRadius(settings.viewDistance||2);for(const channel of ['music','effects','ambient','interface'])this.audio.setVolume((settings[channel]??80)/100,channel);this.audio.setVolume((settings.volume??80)/100,'master');this.onResize();if(settings.fullscreen&&!document.fullscreenElement)this.canvas.requestFullscreen?.().catch(()=>{});else if(!settings.fullscreen&&document.fullscreenElement)document.exitFullscreen?.().catch(()=>{})}
   setCameraDistance(distance,persist=true){this.cameraDistance=clamp(Number(distance)||9,4,16);this.camera.zoom=clamp(320/this.cameraDistance,22,54);if(persist)try{const settings=JSON.parse(localStorage.getItem('carpincho_settings')||'{}');settings.cameraDistance=this.cameraDistance;localStorage.setItem('carpincho_settings',JSON.stringify(settings))}catch{}}
@@ -266,7 +275,31 @@ export class Game{
     this._saveCd-=dt;if(this._saveCd<=0){this._saveCd=12;this.doSave(true)}
   }
   updateDashboard(){const dashboard=document.getElementById('train-dashboard');if(!dashboard)return;dashboard.classList.toggle('active',this.train.inTrain);for(const [key,value]of Object.entries({speed:this.train.speed.toFixed(1),distance:(this.train.routeProgress/1000).toFixed(1),fuel:Math.round(this.train.fuel),integrity:Math.round(this.train.integrity)})){const element=document.getElementById(`train-${key}`);if(element)element.textContent=value}const destination=document.getElementById('train-destination');if(destination)destination.textContent=`DESTINO: ${this.currentRegion.name.toUpperCase()}`}
-  updatePrompt(){const prompt=document.getElementById('prompt');if(!prompt)return;const touch=this.touchControls?.isTouchInput===true,interact=action=>interactionPrompt(this.settings.controls?.interact,touch,action);let text='';if(this.train.inTrain)text=touch?`↑ acelerar • ↓ frear • ${interact('sair da locomotiva')}`:'F sair • Q acelerar • E frear';else if(distance(this.player.pos,this.train)<2.8)text=interact('entrar ou abastecer a locomotiva');    else if(!this.brokenRepaired&&this.nearBrokenRail(3.5))text=this.canRepairRails()?(touch?'🛤️ Materiais detectados — trilhos se arrumando…':'🛤️ Materiais ok — trilhos se arrumam sozinhos'):(touch?interact('reparar o trilho • 3 sucata + 2 lingotes'):'R reparar • ou junte 3 sucata + 2 lingotes (auto)');else{const resource=this.resources.find(item=>!item.depleted&&distance(item,this.player.pos)<2.4);const station=this.stations.find(item=>distance(item,this.player.pos)<2.4);const npc=this.npcs.find(item=>distance(item,this.player.pos)<2.4);if(resource)text=interact(`coletar ${resource.type}`);else if(station)text=interact(`usar ${station.type.replaceAll('_',' ')}`);else if(npc)text=interact(`conversar com ${npc.name}`)}prompt.textContent=text}
+  updatePrompt(){
+    const prompt=document.getElementById('prompt');
+    if(!prompt)return;
+    const touch=this.touchControls?.isTouchInput===true;
+    const interact=action=>interactionPrompt(this.settings.controls?.interact,touch,action);
+    let text='';
+    if(this.train.inTrain)text=touch?`↑ acelerar • ↓ frear • ${interact('sair da locomotiva')}`:'F sair • Q acelerar • E frear';
+    else if(distance(this.player.pos,this.train)<2.8)text=interact('entrar ou abastecer a locomotiva');
+    else if(!this.brokenRepaired&&this.nearBrokenRail(3.5))text=this.canRepairRails()?(touch?'🛤️ Materiais detectados — trilhos se arrumando…':'🛤️ Materiais ok — trilhos se arrumam sozinhos'):(touch?interact('reparar o trilho • 3 sucata + 2 lingotes'):'R reparar • ou junte 3 sucata + 2 lingotes (auto)');
+    else{
+      const resource=this.resources.find(item=>!item.depleted&&distance(item,this.player.pos)<2.4);
+      const station=this.stations.find(item=>distance(item,this.player.pos)<2.4);
+      const npc=this.npcs.find(item=>distance(item,this.player.pos)<2.4);
+      if(resource)text=interact(`coletar ${resource.type}`);
+      else if(station)text=interact(`usar ${station.type.replaceAll('_',' ')}`);
+      else if(npc)text=interact(`conversar com ${npc.name}`);
+    }
+    if(text){
+      prompt.hidden=false;
+      prompt.textContent=text;
+    }else{
+      prompt.textContent='';
+      prompt.hidden=true;
+    }
+  }
 
   worldToScreen(x,z){return{x:(x-this.camera.x)*this.camera.zoom+this.width/2,y:(z-this.camera.z)*this.camera.zoom+this.height/2}}
   screenToWorld(x,y){return{x:(x-this.width/2)/this.camera.zoom+this.camera.x,z:(y-this.height/2)/this.camera.zoom+this.camera.z}}
