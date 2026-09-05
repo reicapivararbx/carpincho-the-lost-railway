@@ -13,9 +13,60 @@ export class Authority{
   constructor({now=()=>Date.now(),random=Math.random}={}){this.now=now;this.random=random;this.rooms=new Map();this.players=new Map();this.usedSeq=new Map();this.worldSaves=new Map();this.playerSaves=new Map()}
   roomCode(){let code;do code=this.random().toString(36).slice(2,6).toUpperCase().padEnd(4,'X');while(this.rooms.has(code));return code}
   addPlayer(id,name){const player=createPlayer(id,name);this.players.set(id,player);return player}
-  createRoom(playerId,{name='Sala',maxPlayers=4,private:privateRoom=false,password=''}={}){const code=this.roomCode(),room={code,name:cleanText(name).slice(0,30),max:Math.max(2,Math.min(8,Number(maxPlayers)||4)),private:Boolean(privateRoom),password:privateRoom?String(password).slice(0,40):'',hostId:playerId,players:new Set([playerId]),roles:new Map([[playerId,'host']]),world:{train:{x:0,z:10,speed:0,fuel:80},mobs:{},bosses:{},loot:{},events:[],revision:0}};this.rooms.set(code,room);this.players.get(playerId).room=code;return room}
-  joinRoom(playerId,{roomCode,password='',role='crew'}={}){const room=this.rooms.get(String(roomCode||'').toUpperCase());if(!room)return {ok:false,reason:'Sala não existe'};if(room.players.size>=room.max)return {ok:false,reason:'Sala cheia'};if(room.private&&room.password!==String(password))return {ok:false,reason:'Senha inválida'};room.players.add(playerId);room.roles.set(playerId,['crew','engineer','guard','scout'].includes(role)?role:'crew');this.players.get(playerId).room=room.code;return {ok:true,room}}
-  leave(playerId){const player=this.players.get(playerId),room=this.rooms.get(player?.room);if(!room)return null;room.players.delete(playerId);room.roles.delete(playerId);if(room.hostId===playerId){room.hostId=room.players.values().next().value||null;if(room.hostId)room.roles.set(room.hostId,'host')}if(!room.players.size)this.rooms.delete(room.code);player.room=null;return room}
+  createRoom(playerId,{name='Sala',maxPlayers=4,private:privateRoom=false,password='',serverId=null,portalServerId=null}={}){
+    const preferred = String(portalServerId||serverId||'').trim();
+    let code;
+    if(preferred && preferred.length===4 && !this.rooms.has(preferred.toUpperCase())){
+      code=preferred.toUpperCase();
+    } else {
+      code=this.roomCode();
+    }
+    const room={
+      code,
+      name:cleanText(name).slice(0,30),
+      max:Math.max(2,Math.min(8,Number(maxPlayers)||4)),
+      private:Boolean(privateRoom),
+      password:privateRoom?String(password).slice(0,40):'',
+      hostId:playerId,
+      players:new Set([playerId]),
+      roles:new Map([[playerId,'host']]),
+      portalServerId: preferred || null,
+      world:{train:{x:0,z:10,speed:0,fuel:80},mobs:{},bosses:{},loot:{},events:[],revision:0},
+    };
+    this.rooms.set(code,room);
+    this.players.get(playerId).room=code;
+    return room;
+  }
+  joinRoom(playerId,{roomCode,password='',role='crew',serverId=null}={}){
+    let room=this.rooms.get(String(roomCode||'').toUpperCase());
+    if(!room && serverId){
+      for(const r of this.rooms.values()){
+        if(r.portalServerId && String(r.portalServerId)===String(serverId)){ room=r; break; }
+      }
+    }
+    if(!room)return {ok:false,reason:'Sala não existe'};
+    if(room.players.size>=room.max)return {ok:false,reason:'Sala cheia'};
+    if(room.private&&room.password!==String(password))return {ok:false,reason:'Senha inválida'};
+    room.players.add(playerId);
+    room.roles.set(playerId,['crew','engineer','guard','scout'].includes(role)?role:'crew');
+    this.players.get(playerId).room=room.code;
+    return {ok:true,room};
+  }
+  leave(playerId){
+    const player=this.players.get(playerId),room=this.rooms.get(player?.room);
+    if(!room)return null;
+    room.players.delete(playerId);
+    room.roles.delete(playerId);
+    if(room.hostId===playerId){
+      room.hostId=room.players.values().next().value||null;
+      if(room.hostId)room.roles.set(room.hostId,'host');
+    }
+    const emptied=!room.players.size;
+    if(emptied)this.rooms.delete(room.code);
+    player.room=null;
+    room._emptied=emptied;
+    return room;
+  }
   checkSeq(playerId,seq){if(!Number.isSafeInteger(seq)||seq<0)return false;const key=`${playerId}:${seq}`;if(this.usedSeq.has(key))return false;this.usedSeq.set(key,this.now());return true}
   playerState(playerId,payload){const p=this.players.get(playerId);if(!p||!payload||!['x','z','speed'].every(key=>Number.isFinite(payload[key])))return {ok:false,reason:'estado inválido'};if(Math.abs(payload.x)>10000||Math.abs(payload.z)>10000||payload.speed<0||payload.speed>6.5)return {ok:false,reason:'velocidade impossível'};const elapsed=Math.min(1.5,Math.max(.01,(this.now()-p.lastStateAt)/1000)),distance=Math.hypot(payload.x-p.x,payload.z-p.z);if(p.hasState&&distance>6.5*elapsed+2.5)return {ok:false,reason:'movimento impossível'};Object.assign(p,{x:payload.x,z:payload.z,speed:payload.speed,lastStateAt:this.now(),hasState:true});return {ok:true,state:{playerId,...payload,hp:p.hp}}}
   craft(playerId,{recipeId,station='hand',level=1,seq}={}){const p=this.players.get(playerId);if(!p||!this.checkSeq(playerId,seq))return {ok:false,reason:'sequência duplicada'};const recipe=RecipeDB.lookup(recipeId);if(!recipe)return {ok:false,reason:'receita inexistente'};if(recipe.stationRequired!==station)return {ok:false,reason:'estação inválida'};if(level<recipe.levelRequired)return {ok:false,reason:'nível insuficiente'};for(const ingredient of recipe.ingredients)if((p.inventory[ingredient.item]||0)<ingredient.amount)return {ok:false,reason:`ingrediente insuficiente: ${ingredient.item}`};for(const ingredient of recipe.ingredients)p.inventory[ingredient.item]-=ingredient.amount;p.inventory[recipe.output]=(p.inventory[recipe.output]||0)+recipe.outputQuantity;return {ok:true,output:recipe.output,outputQuantity:recipe.outputQuantity,inventory:{...p.inventory}}}
