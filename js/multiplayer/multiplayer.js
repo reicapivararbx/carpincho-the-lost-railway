@@ -18,7 +18,7 @@ export class Multiplayer {
   }
   send(type,payload={}){ if(this.connected && this.socket.readyState===WebSocket.OPEN) this.socket.send(JSON.stringify({type,payload,seq:this.seq++})); }
   createRoom(name,maxPlayers,options={}){ this.send('CREATE_ROOM',{name,maxPlayers,...options}); }
-  join(code,password='',role='crew'){ this.send('JOIN',{roomCode:code.trim().toUpperCase(),password,role}); }
+  join(code,password='',role='crew',options={}){ this.send('JOIN',{roomCode:String(code||'').trim().toUpperCase(),password,role,...options}); }
   sendState(state){ this.send('PLAYER_STATE',state); }
   sendTrain(state){this.send('TRAIN_STATE',state)}
   sendWorld(state){this.send('WORLD_STATE',state)}

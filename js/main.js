@@ -57,6 +57,26 @@ function initMenu(){
     startGame({name:'Carpincho'},false,multiplayer);
     showNotif(`Sala ${code} ativa — cooperação conectada.`);
   };
+  const readPortalParams=()=>{
+    try{
+      const q=new URLSearchParams(location.search||'');
+      const serverId=q.get('serverId')||'';
+      const joinToken=q.get('joinToken')||'';
+      const lobby=q.get('lobby')||'';
+      const visibility=q.get('visibility')||'';
+      const serverName=q.get('serverName')||'';
+      const asHost=q.get('asHost')==='1'||q.get('asHost')==='true';
+      if(!serverId&&!lobby&&!joinToken) return null;
+      return {serverId,joinToken,lobby,visibility,serverName,asHost};
+    }catch{return null}
+  };
+  const clearPortalParams=()=>{
+    try{
+      const url=new URL(location.href);
+      ['serverId','joinToken','lobby','invite','visibility','serverName','asHost'].forEach(k=>url.searchParams.delete(k));
+      history.replaceState({},'',url.pathname+(url.search?url.search:'')+url.hash);
+    }catch{}
+  };
   const connectMultiplayer=async()=>{
     if(multiplayer?.connected) return multiplayer;
     multiplayer=new Multiplayer();
@@ -70,6 +90,32 @@ function initMenu(){
     await multiplayer.connect(`${wsProtocol}://${location.host}/capyrails/ws`);
     return multiplayer;
   };
+  const bootPortalDeepLink=async()=>{
+    const params=readPortalParams();
+    if(!params) return;
+    try{
+      const mp=await connectMultiplayer();
+      if(params.asHost&&params.serverId){
+        mp.createRoom(params.serverName||'Portal',4,{
+          private:params.visibility==='private',
+          serverId:params.serverId,
+          portalServerId:params.serverId,
+          joinToken:params.joinToken||undefined,
+        });
+      }else{
+        mp.join(params.lobby||'', '', 'crew', {
+          serverId:params.serverId||undefined,
+          joinToken:params.joinToken||undefined,
+        });
+      }
+      clearPortalParams();
+    }catch(error){
+      const status=$('mp-status');
+      if(status) status.textContent=error.message;
+      $('menu')?.classList.remove('active');
+      $('multiplayer')?.classList.add('active');
+    }
+  };
   $('btn-mp-create').onclick=async()=>{
     $('mp-status').textContent='Conectando ao servidor…';
     try { const mp=await connectMultiplayer(); mp.createRoom($('mp-name').value,Number($('mp-max').value),{private:$('mp-private').checked,password:$('mp-password').value}); }
@@ -80,6 +126,7 @@ function initMenu(){
     try { const mp=await connectMultiplayer(); mp.join($('mp-code').value,$('mp-password').value,$('mp-role').value); }
     catch(error){ $('mp-status').textContent=error.message; }
   };
+  bootPortalDeepLink();
   $('btn-sair').onclick=()=> showNotif('Até logo!');
   // in-game UI
   $('inv-close')?.addEventListener('click',()=> game?.closeMenu());
